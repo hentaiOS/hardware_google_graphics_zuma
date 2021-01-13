@@ -23,6 +23,7 @@
 #include "DeconHeader.h"
 
 #define G2D_MAX_SRC_NUM 3
+#define DISABLE_M2M_MPPS
 
 #define VSYNC_DEV_PREFIX "/sys/devices/platform/"
 #define PSR_DEV_NAME  "1c300000.decon_f/psr_info"
