@@ -24,7 +24,7 @@
 
 using namespace displaycolor;
 
-namespace gs101 {
+namespace zuma {
 
 class ExynosDeviceModule : public ExynosDevice {
     public:
@@ -43,6 +43,6 @@ class ExynosDeviceModule : public ExynosDevice {
         uint32_t mActiveDisplay;
 };
 
-}  // namespace gs101
+}  // namespace zuma
 
 #endif

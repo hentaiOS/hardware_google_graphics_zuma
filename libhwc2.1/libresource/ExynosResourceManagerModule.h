@@ -18,7 +18,7 @@
 
 #include "ExynosResourceManager.h"
 
-namespace gs101 {
+namespace zuma {
 
 class ExynosResourceManagerModule : public ExynosResourceManager {
     public:
@@ -26,6 +26,6 @@ class ExynosResourceManagerModule : public ExynosResourceManager {
         ~ExynosResourceManagerModule();
 };
 
-}  // namespace gs101
+}  // namespace zuma
 
 #endif // _EXYNOS_RESOURCE_MANAGER_MODULE_H

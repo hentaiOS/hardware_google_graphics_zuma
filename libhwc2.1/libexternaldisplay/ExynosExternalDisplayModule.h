@@ -19,7 +19,7 @@
 #include "ExynosDisplay.h"
 #include "ExynosExternalDisplay.h"
 
-namespace gs101 {
+namespace zuma {
 
 class ExynosExternalDisplayModule : public ExynosExternalDisplay {
     public:
@@ -28,6 +28,6 @@ class ExynosExternalDisplayModule : public ExynosExternalDisplay {
         virtual int32_t validateWinConfigData();
 };
 
-}  // namespace gs101
+}  // namespace zuma
 
 #endif

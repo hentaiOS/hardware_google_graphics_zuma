@@ -20,7 +20,7 @@
 
 #define MAX_DPP_ROT_SRC_SIZE (3040*1440)
 
-namespace gs101 {
+namespace zuma {
 
 class ExynosMPPModule : public ExynosMPP {
     public:
@@ -33,6 +33,6 @@ class ExynosMPPModule : public ExynosMPP {
         uint32_t mChipId;
 };
 
-}  // namespace gs101
+}  // namespace zuma
 
 #endif

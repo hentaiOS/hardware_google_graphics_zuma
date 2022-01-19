@@ -44,7 +44,7 @@ int32_t convertDqeMatrixDataToMatrix(T &colorMatrix, M &mat,
     return NO_ERROR;
 }
 
-using namespace gs101;
+using namespace zuma;
 
 /////////////////////////////////////////////////// ExynosDisplayDrmInterfaceModule //////////////////////////////////////////////////////////////////
 ExynosDisplayDrmInterfaceModule::ExynosDisplayDrmInterfaceModule(ExynosDisplay *exynosDisplay)

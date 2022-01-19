@@ -19,7 +19,7 @@
 #include "ExynosDisplay.h"
 #include "ExynosVirtualDisplay.h"
 
-namespace gs101 {
+namespace zuma {
 
 class ExynosVirtualDisplayModule : public ExynosVirtualDisplay {
 public:

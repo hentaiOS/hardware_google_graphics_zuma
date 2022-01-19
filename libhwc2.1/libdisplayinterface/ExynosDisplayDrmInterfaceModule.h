@@ -21,7 +21,7 @@
 
 #include "ExynosDisplayDrmInterface.h"
 
-namespace gs101 {
+namespace zuma {
 
 using namespace displaycolor;
 
@@ -165,6 +165,6 @@ class ExynosExternalDisplayDrmInterfaceModule : public ExynosDisplayDrmInterface
         virtual ~ExynosExternalDisplayDrmInterfaceModule();
 };
 
-}  // namespace gs101
+}  // namespace zuma
 
 #endif

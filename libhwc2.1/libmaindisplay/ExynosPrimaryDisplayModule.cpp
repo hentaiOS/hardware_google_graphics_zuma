@@ -40,7 +40,7 @@ mpp_phycal_type_t getMPPTypeFromDPPChannel(uint32_t channel) {
     return MPP_P_TYPE_MAX;
 }
 
-using namespace gs101;
+using namespace zuma;
 
 // enable map layerDataMappingInfo comparison in needDisplayColorSetting()
 inline bool operator==(const ExynosPrimaryDisplayModule::DisplaySceneInfo::LayerMappingInfo &lm1,

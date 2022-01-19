@@ -91,7 +91,7 @@ const std::unordered_map<std::string, std::string> kAtcSubSetting =
          {"gain_limit", ATC_GAIN_LIMIT_FILE_NAME},
          {"lt_calc_ab_shift", ATC_LT_CALC_AB_SHIFT_FILE_NAME}};
 
-namespace gs101 {
+namespace zuma {
 
 using namespace displaycolor;
 
@@ -322,6 +322,6 @@ class ExynosPrimaryDisplayModule : public ExynosPrimaryDisplay {
         virtual int32_t setPowerMode(int32_t mode) override;
 };
 
-}  // namespace gs101
+}  // namespace zuma
 
 #endif

@@ -20,7 +20,7 @@
 
 extern struct exynos_hwc_control exynosHWCControl;
 
-using namespace gs101;
+using namespace zuma;
 
 ExynosDeviceModule::ExynosDeviceModule() : ExynosDevice(), mDisplayColorLoader(DISPLAY_COLOR_LIB) {
     exynosHWCControl.skipStaticLayers = false;

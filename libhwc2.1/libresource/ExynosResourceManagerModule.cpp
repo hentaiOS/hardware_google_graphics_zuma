@@ -17,7 +17,7 @@
 #include "ExynosMPPModule.h"
 #define CHIP_ID_PATH "/sys/devices/system/chip-id/revision"
 
-using namespace gs101;
+using namespace zuma;
 
 ExynosResourceManagerModule::ExynosResourceManagerModule(ExynosDevice* device)
         : ExynosResourceManager(device)

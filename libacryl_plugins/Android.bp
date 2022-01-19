@@ -11,7 +11,7 @@ cc_library {
     name: "libacryl_hdr_plugin",
     proprietary: true,
     include_dirs: [
-        "hardware/google/graphics/gs101/include",
+        "hardware/google/graphics/zuma/include",
         "hardware/google/graphics/common/include"
     ],
     srcs: ["libacryl_hdr_plugin.cpp"],

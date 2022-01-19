@@ -18,7 +18,7 @@
 
 #include "ExynosVirtualDisplayModule.h"
 
-using namespace gs101;
+using namespace zuma;
 
 ExynosVirtualDisplayModule::ExynosVirtualDisplayModule(uint32_t index, ExynosDevice *device)
     :   ExynosVirtualDisplay(index, device)
@@ -49,4 +49,3 @@ int32_t ExynosVirtualDisplayModule::getDisplayAttribute(
     }
     return HWC2_ERROR_NONE;
 }
-

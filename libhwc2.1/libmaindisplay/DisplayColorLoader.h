@@ -23,7 +23,7 @@
 #include <string>
 #include <vector>
 
-namespace gs101 {
+namespace zuma {
 
 class DisplayColorLoader {
     public:
@@ -97,6 +97,6 @@ class DisplayColorLoader {
               const std::vector<displaycolor::DisplayInfo> &);
 };
 
-}  // namespace gs101
+}  // namespace zuma
 
 #endif //DISPLAY_COLOR_LOADER_H

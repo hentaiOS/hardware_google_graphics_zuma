@@ -19,7 +19,7 @@
 #include "ExynosResourceManager.h"
 #include "ExynosPrimaryDisplayModule.h"
 
-using namespace gs101;
+using namespace zuma;
 
 ExynosMPPModule::ExynosMPPModule(ExynosResourceManager* resourceManager,
         uint32_t physicalType, uint32_t logicalType, const char *name,

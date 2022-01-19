@@ -26,7 +26,7 @@
 
 #define SKIP_FRAME_COUNT        3
 
-using namespace gs101;
+using namespace zuma;
 
 ExynosExternalDisplayModule::ExynosExternalDisplayModule(uint32_t index, ExynosDevice *device)
     :    ExynosExternalDisplay(index, device)
