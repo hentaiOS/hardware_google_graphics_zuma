@@ -488,45 +488,45 @@ int32_t ExynosDisplayDrmInterfaceModule::setDisplayColorSetting(
     const IDisplayColorGS101::IDqe &dqe = display->getDqe();
 
     if ((mDrmCrtc->cgc_lut_property().id() != 0) &&
-        (ret = setDisplayColorBlob(mDrmCrtc->cgc_lut_property(),
+        ((ret = setDisplayColorBlob(mDrmCrtc->cgc_lut_property(),
                 static_cast<uint32_t>(DqeBlobs::CGC),
-                dqe.Cgc(), dqe, drmReq) != NO_ERROR)) {
+                dqe.Cgc(), dqe, drmReq)) != NO_ERROR)) {
         HWC_LOGE(mExynosDisplay, "%s: set Cgc blob fail", __func__);
         return ret;
     }
     if ((ret = setDisplayColorBlob(mDrmCrtc->degamma_lut_property(),
                 static_cast<uint32_t>(DqeBlobs::DEGAMMA_LUT),
-                dqe.DegammaLut(), dqe, drmReq) != NO_ERROR)) {
+                dqe.DegammaLut(), dqe, drmReq)) != NO_ERROR) {
         HWC_LOGE(mExynosDisplay, "%s: set DegammaLut blob fail", __func__);
         return ret;
     }
     if ((ret = setDisplayColorBlob(mDrmCrtc->gamma_lut_property(),
                 static_cast<uint32_t>(DqeBlobs::REGAMMA_LUT),
-                dqe.RegammaLut(), dqe, drmReq) != NO_ERROR)) {
+                dqe.RegammaLut(), dqe, drmReq)) != NO_ERROR) {
         HWC_LOGE(mExynosDisplay, "%s: set RegammaLut blob fail", __func__);
         return ret;
     }
     if ((ret = setDisplayColorBlob(mDrmCrtc->gamma_matrix_property(),
                 static_cast<uint32_t>(DqeBlobs::GAMMA_MAT),
-                dqe.GammaMatrix(), dqe, drmReq) != NO_ERROR)) {
+                dqe.GammaMatrix(), dqe, drmReq)) != NO_ERROR) {
         HWC_LOGE(mExynosDisplay, "%s: set GammaMatrix blob fail", __func__);
         return ret;
     }
     if ((ret = setDisplayColorBlob(mDrmCrtc->linear_matrix_property(),
                 static_cast<uint32_t>(DqeBlobs::LINEAR_MAT),
-                dqe.LinearMatrix(), dqe, drmReq) != NO_ERROR)) {
+                dqe.LinearMatrix(), dqe, drmReq)) != NO_ERROR) {
         HWC_LOGE(mExynosDisplay, "%s: set LinearMatrix blob fail", __func__);
         return ret;
     }
     if ((ret = setDisplayColorBlob(mDrmCrtc->disp_dither_property(),
                 static_cast<uint32_t>(DqeBlobs::DISP_DITHER),
-                dqe.DqeControl(), dqe, drmReq) != NO_ERROR)) {
+                dqe.DqeControl(), dqe, drmReq)) != NO_ERROR) {
         HWC_LOGE(mExynosDisplay, "%s: set DispDither blob fail", __func__);
         return ret;
     }
     if ((ret = setDisplayColorBlob(mDrmCrtc->cgc_dither_property(),
                 static_cast<uint32_t>(DqeBlobs::CGC_DITHER),
-                dqe.DqeControl(), dqe, drmReq) != NO_ERROR)) {
+                dqe.DqeControl(), dqe, drmReq)) != NO_ERROR) {
         HWC_LOGE(mExynosDisplay, "%s: set CgcDither blob fail", __func__);
         return ret;
     }
@@ -685,28 +685,28 @@ int32_t ExynosDisplayDrmInterfaceModule::setPlaneColorSetting(
     int ret = 0;
     if ((ret = setPlaneColorBlob(plane, plane->eotf_lut_property(),
                 static_cast<uint32_t>(DppBlobs::EOTF),
-                dpp.EotfLut(), dpp, dppIndex, drmReq, planeChanged) != NO_ERROR)) {
+                dpp.EotfLut(), dpp, dppIndex, drmReq, planeChanged)) != NO_ERROR) {
         HWC_LOGE(mExynosDisplay, "%s: dpp[%d] set oetf blob fail",
                 __func__, dppIndex);
         return ret;
     }
     if ((ret = setPlaneColorBlob(plane, plane->gammut_matrix_property(),
                 static_cast<uint32_t>(DppBlobs::GM),
-                dpp.Gm(), dpp, dppIndex, drmReq, planeChanged) != NO_ERROR)) {
+                dpp.Gm(), dpp, dppIndex, drmReq, planeChanged)) != NO_ERROR) {
         HWC_LOGE(mExynosDisplay, "%s: dpp[%d] set GM blob fail",
                 __func__, dppIndex);
         return ret;
     }
     if ((ret = setPlaneColorBlob(plane, plane->tone_mapping_property(),
                 static_cast<uint32_t>(DppBlobs::DTM),
-                dpp.Dtm(), dpp, dppIndex, drmReq, planeChanged) != NO_ERROR)) {
+                dpp.Dtm(), dpp, dppIndex, drmReq, planeChanged)) != NO_ERROR) {
         HWC_LOGE(mExynosDisplay, "%s: dpp[%d] set DTM blob fail",
                 __func__, dppIndex);
         return ret;
     }
     if ((ret = setPlaneColorBlob(plane, plane->oetf_lut_property(),
                 static_cast<uint32_t>(DppBlobs::OETF),
-                dpp.OetfLut(), dpp, dppIndex, drmReq, planeChanged) != NO_ERROR)) {
+                dpp.OetfLut(), dpp, dppIndex, drmReq, planeChanged)) != NO_ERROR) {
         HWC_LOGE(mExynosDisplay, "%s: dpp[%d] set OETF blob fail",
                 __func__, dppIndex);
         return ret;
