@@ -301,7 +301,7 @@ class ExynosPrimaryDisplayModule : public ExynosPrimaryDisplay {
         bool isDisplaySwitched(int32_t mode, int32_t prevMode);
 
         std::map<std::string, atc_mode> mAtcModeSetting;
-        bool mAtcInit;
+        bool mAtcInit = false;
         LbeState mCurrentLbeState = LbeState::OFF;
         std::string mCurrentAtcModeName;
         uint32_t mCurrentLux = 0;
@@ -312,10 +312,10 @@ class ExynosPrimaryDisplayModule : public ExynosPrimaryDisplay {
         std::unordered_map<std::string, CtrlValue<int32_t>> mAtcSubSetting;
         uint32_t mAtcStStepCount = 0;
         uint32_t mAtcStTarget = 0;
-        uint32_t mAtcStUpStep;
-        uint32_t mAtcStDownStep;
+        uint32_t mAtcStUpStep = 0;
+        uint32_t mAtcStDownStep = 0;
         Mutex mAtcStMutex;
-        bool mPendingAtcOff;
+        bool mPendingAtcOff = false;
         bool mForceColorUpdate = false;
 
     protected:
