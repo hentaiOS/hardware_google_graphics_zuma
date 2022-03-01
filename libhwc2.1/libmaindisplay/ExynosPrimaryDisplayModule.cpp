@@ -267,7 +267,8 @@ int32_t ExynosPrimaryDisplayModule::setColorTransform(
 }
 
 int32_t ExynosPrimaryDisplayModule::getClientTargetProperty(
-        hwc_client_target_property_t* outClientTargetProperty) {
+        hwc_client_target_property_t* outClientTargetProperty,
+        HwcDimmingStage *outDimmingStage) {
     IDisplayColorGS101* displayColorInterface = getDisplayColorInterface();
     if (displayColorInterface == nullptr) {
         return ExynosDisplay::getClientTargetProperty(outClientTargetProperty);
@@ -276,9 +277,15 @@ int32_t ExynosPrimaryDisplayModule::getClientTargetProperty(
     const DisplayType display = getDisplayTypeFromIndex(mIndex);
     hwc::PixelFormat pixelFormat;
     hwc::Dataspace dataspace;
-    if (!displayColorInterface->GetBlendingProperty(display, pixelFormat, dataspace)) {
+    bool dimming_linear;
+    if (!displayColorInterface->GetBlendingProperty(display, pixelFormat, dataspace,
+                                                    dimming_linear)) {
         outClientTargetProperty->pixelFormat = toUnderlying(pixelFormat);
         outClientTargetProperty->dataspace = toUnderlying(dataspace);
+        if (outDimmingStage != nullptr)
+            *outDimmingStage = dimming_linear
+                              ? HwcDimmingStage::DIMMING_LINEAR
+                              : HwcDimmingStage::DIMMING_OETF;
 
         return HWC2_ERROR_NONE;
     }
@@ -561,6 +568,7 @@ int32_t ExynosPrimaryDisplayModule::DisplaySceneInfo::setClientCompositionColorD
         const ExynosCompositionInfo &clientCompositionInfo, LayerColorData& layerData,
         float dimSdrRatio)
 {
+    layerData.dim_ratio = 1.0f;
     setLayerDataspace(layerData,
                       static_cast<hwc::Dataspace>(clientCompositionInfo.mDataSpace));
     disableLayerHdrStaticMetadata(layerData);
@@ -582,6 +590,7 @@ int32_t ExynosPrimaryDisplayModule::DisplaySceneInfo::setClientCompositionColorD
 int32_t ExynosPrimaryDisplayModule::DisplaySceneInfo::setLayerColorData(
         LayerColorData& layerData, ExynosLayer* layer, float dimSdrRatio)
 {
+    layerData.dim_ratio = layer->mPreprocessedInfo.sdrDimRatio;
     setLayerDataspace(layerData,
             static_cast<hwc::Dataspace>(layer->mDataSpace));
     if (layer->mIsHdrLayer) {
