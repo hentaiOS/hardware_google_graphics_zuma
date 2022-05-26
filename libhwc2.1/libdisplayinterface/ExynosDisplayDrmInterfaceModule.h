@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
 #define EXYNOS_DISPLAY_DRM_INTERFACE_MODULE_H
 
 #include <gs101/displaycolor/displaycolor_gs101.h>
+#include <histogram/histogram.h>
 
 #include "ExynosDisplayDrmInterface.h"
 
@@ -69,6 +70,27 @@ class ExynosDisplayDrmInterfaceModule : public ExynosDisplayDrmInterface {
                 uint32_t &blobId);
 
         void getDisplayInfo(std::vector<displaycolor::DisplayInfo> &display_info);
+
+        /* For Histogram */
+        int32_t createHistoRoiBlob(uint32_t &blobId);
+        int32_t createHistoWeightsBlob(uint32_t &blobId);
+
+        virtual int32_t setDisplayHistogramSetting(
+                ExynosDisplayDrmInterface::DrmModeAtomicReq &drmReq);
+
+        virtual void registerHistogramInfo(IDLHistogram *info) {
+            if (info)
+                mHistogramInfo.reset(info);
+            else
+                mHistogramInfo.reset();
+
+            if (mHistogramInfo.get())
+                mHistogramInfoRegistered = true;
+            else
+                mHistogramInfoRegistered = false;
+        }
+        int32_t setHistogramControl(hidl_histogram_control_t enabled);
+        virtual int32_t setHistogramData(void *bin);
 
     protected:
         class SaveBlob {
@@ -147,6 +169,23 @@ class ExynosDisplayDrmInterfaceModule : public ExynosDisplayDrmInterface {
             BPC_10,
         };
         DrmEnumParser::MapHal2DrmEnum mBpcEnums;
+
+        /* For Histogram */
+        class HistoBlobs : public SaveBlob {
+        public:
+            enum Histo_Blob_Type {
+                ROI,
+                WEIGHTS,
+                HISTO_BLOB_NUM // number of Histogram blobs
+            };
+            void init(DrmDevice *drmDevice) { SaveBlob::init(drmDevice, HISTO_BLOB_NUM); }
+        };
+        int32_t setDisplayHistoBlob(const DrmProperty &prop, const uint32_t type,
+                                    ExynosDisplayDrmInterface::DrmModeAtomicReq &drmReq);
+        HistoBlobs mOldHistoBlobs;
+
+        std::shared_ptr<IDLHistogram> mHistogramInfo;
+        bool mHistogramInfoRegistered = false;
 
     private:
         const std::string GetPanelInfo(const std::string &sysfs_rel, char delim);
