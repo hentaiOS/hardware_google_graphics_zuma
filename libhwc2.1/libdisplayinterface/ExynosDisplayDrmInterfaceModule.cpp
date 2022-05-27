@@ -490,7 +490,7 @@ int32_t ExynosDisplayDrmInterfaceModule::setDisplayColorSetting(
     if ((mDrmCrtc->cgc_lut_property().id() != 0) &&
         ((ret = setDisplayColorBlob(mDrmCrtc->cgc_lut_property(),
                 static_cast<uint32_t>(DqeBlobs::CGC),
-                dqe.Cgc(), dqe, drmReq)) != NO_ERROR)) {
+                dqe.Cgc(), dqe, drmReq))) != NO_ERROR) {
         HWC_LOGE(mExynosDisplay, "%s: set Cgc blob fail", __func__);
         return ret;
     }
@@ -866,13 +866,13 @@ int32_t ExynosDisplayDrmInterfaceModule::setDisplayHistogramSetting(
     int ret = NO_ERROR;
 
     if ((ret = setDisplayHistoBlob(mDrmCrtc->histogram_roi_property(),
-                                   static_cast<uint32_t>(HistoBlobs::ROI), drmReq) != NO_ERROR)) {
+                                   static_cast<uint32_t>(HistoBlobs::ROI), drmReq)) != NO_ERROR) {
         HWC_LOGE(mExynosDisplay, "%s: Failed to set Histo_ROI blob", __func__);
         return ret;
     }
     if ((ret = setDisplayHistoBlob(mDrmCrtc->histogram_weights_property(),
                                    static_cast<uint32_t>(HistoBlobs::WEIGHTS),
-                                   drmReq) != NO_ERROR)) {
+                                   drmReq)) != NO_ERROR) {
         HWC_LOGE(mExynosDisplay, "%s: Failed to set Histo_Weights blob", __func__);
         return ret;
     }
