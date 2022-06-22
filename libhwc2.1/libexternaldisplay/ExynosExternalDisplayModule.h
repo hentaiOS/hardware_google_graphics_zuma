@@ -21,7 +21,12 @@
 
 namespace zuma {
 
-using ExynosExternalDisplayModule = gs201::ExynosExternalDisplayModule;
+class ExynosExternalDisplayModule : public gs201::ExynosExternalDisplayModule {
+    public:
+        ExynosExternalDisplayModule(uint32_t index, ExynosDevice *device);
+        ~ExynosExternalDisplayModule();
+        virtual int32_t validateWinConfigData();
+};
 
 }  // namespace zuma
 

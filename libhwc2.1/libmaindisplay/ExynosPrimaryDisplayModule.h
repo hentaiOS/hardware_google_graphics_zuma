@@ -23,7 +23,12 @@ namespace zuma {
 
 using namespace displaycolor;
 
-using ExynosPrimaryDisplayModule = gs201::ExynosPrimaryDisplayModule;
+class ExynosPrimaryDisplayModule : public gs201::ExynosPrimaryDisplayModule {
+    public:
+        ExynosPrimaryDisplayModule(uint32_t index, ExynosDevice *device);
+        ~ExynosPrimaryDisplayModule();
+        virtual int32_t validateWinConfigData();
+};
 
 }  // namespace zuma
 
