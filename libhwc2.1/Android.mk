@@ -22,7 +22,8 @@ LOCAL_SRC_FILES += \
 	../../gs101/libhwc2.1/libexternaldisplay/ExynosExternalDisplayModule.cpp \
 	../../$(TARGET_BOARD_PLATFORM)/libhwc2.1/libexternaldisplay/ExynosExternalDisplayModule.cpp \
 	../../gs101/libhwc2.1/libvirtualdisplay/ExynosVirtualDisplayModule.cpp \
-	../../gs101/libhwc2.1/libdisplayinterface/ExynosDisplayDrmInterfaceModule.cpp
+	../../gs101/libhwc2.1/libdisplayinterface/ExynosDisplayDrmInterfaceModule.cpp \
+	../../zuma/libhwc2.1/libcolormanager/DisplayColorModule.cpp
 
 LOCAL_CFLAGS += -DDISPLAY_COLOR_LIB=\"libdisplaycolor.so\"
 
