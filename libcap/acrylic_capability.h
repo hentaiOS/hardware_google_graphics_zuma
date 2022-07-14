@@ -119,7 +119,7 @@ const static stHW2DCapability __capability_g2d_zuma = {
                          | HW2DCapability::FEATURE_SOLIDCOLOR,
     .num_formats = ARRSIZE(all_fimg2d_zuma_formats),
     .num_dataspaces = ARRSIZE(all_hwc_zuma_dataspaces),
-    .max_layers = 5,
+    .max_layers = 4,
     .pixformats = all_fimg2d_zuma_formats,
     .dataspaces = all_hwc_zuma_dataspaces,
     .base_align = 1,
