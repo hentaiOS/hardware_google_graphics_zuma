@@ -19,8 +19,9 @@
 
 #include "../../gs201/libhwc2.1/ExynosResourceRestriction.h"
 
-static feature_support_t zuma_feature_table[] =
-{
+namespace zuma {
+
+static feature_support_t feature_table[] = {
     {MPP_DPP_GFS,
         MPP_ATTR_AFBC | MPP_ATTR_BLOCK_MODE | MPP_ATTR_WINDOW_UPDATE |
         MPP_ATTR_SCALE |MPP_ATTR_ROT_90 |
@@ -45,13 +46,8 @@ static feature_support_t zuma_feature_table[] =
         MPP_ATTR_LAYER_TRANSFORM
     }
 };
-#ifdef feature_table
-#undef feature_table
-#endif
-#define feature_table zuma_feature_table
 
-const restriction_key_t zuma_restriction_format_table[] =
-{
+static const restriction_key_t restriction_format_table[] = {
     {MPP_DPP_GFS, NODE_NONE, HAL_PIXEL_FORMAT_RGB_565, 0},
     {MPP_DPP_GFS, NODE_NONE, HAL_PIXEL_FORMAT_RGBA_8888, 0},
     {MPP_DPP_GFS, NODE_NONE, HAL_PIXEL_FORMAT_RGBX_8888, 0},
@@ -93,9 +89,7 @@ const restriction_key_t zuma_restriction_format_table[] =
     {MPP_G2D, NODE_NONE, HAL_PIXEL_FORMAT_GOOGLE_NV12_SP, 0},
     {MPP_G2D, NODE_NONE, HAL_PIXEL_FORMAT_GOOGLE_NV12_SP_10B, 0},
 };
-#ifdef restriction_format_table
-#undef restriction_format_table
-#endif
-#define restriction_format_table zuma_restriction_format_table
+
+} // namespace zuma
 
 #endif // EXYNOS_RESOURCE_RESTRICTION_ZUMA_H_
