@@ -16,47 +16,44 @@
 
 #pragma once
 
-// TODO b/224984505: libdisplaycolor:Add Zuma support: DQE
-// update to displaycolor_zuma.h when fix the above bug
-#include <gs101/displaycolor/displaycolor_gs101.h>
+#include <zuma/displaycolor/displaycolor_zuma.h>
+
 #include "DisplayColorLoader.h"
 #include "drmdevice.h"
 
 namespace gs {
 
-// TODO b/224984505: libdisplaycolor:Add Zuma support: DQE
-// update to GetDisplayColorZuma when fix the above bug
-static constexpr char kGsEntry[] = "GetDisplayColorGS101";
+static constexpr char kGsEntry[] = "GetDisplayColorZuma";
 
 class ColorDrmBlobFactory {
- public:
-     using GsInterfaceType = displaycolor::IDisplayColorGS101;
-     using DcLoaderType = DisplayColorLoader<GsInterfaceType, kGsEntry>;
+public:
+    using GsInterfaceType = displaycolor::IDisplayColorZuma;
+    using DcLoaderType = DisplayColorLoader<GsInterfaceType, kGsEntry>;
 
-     static int32_t eotf(const GsInterfaceType::IDpp::EotfData::ConfigType *config,
-                         android::DrmDevice *drm, uint32_t &blobId);
-     static int32_t gm(const GsInterfaceType::IDpp::GmData::ConfigType *config,
+    static int32_t eotf(const GsInterfaceType::IDpp::EotfData::ConfigType *config,
+                        android::DrmDevice *drm, uint32_t &blobId);
+    static int32_t gm(const GsInterfaceType::IDpp::GmData::ConfigType *config,
+                      android::DrmDevice *drm, uint32_t &blobId);
+    static int32_t dtm(const GsInterfaceType::IDpp::DtmData::ConfigType *config,
                        android::DrmDevice *drm, uint32_t &blobId);
-     static int32_t dtm(const GsInterfaceType::IDpp::DtmData::ConfigType *config,
+    static int32_t oetf(const GsInterfaceType::IDpp::OetfData::ConfigType *config,
                         android::DrmDevice *drm, uint32_t &blobId);
-     static int32_t oetf(const GsInterfaceType::IDpp::OetfData::ConfigType *config,
-                         android::DrmDevice *drm, uint32_t &blobId);
-     static int32_t gammaMatrix(const GsInterfaceType::IDqe::DqeMatrixData::ConfigType *config,
+    static int32_t gammaMatrix(const GsInterfaceType::IDqe::DqeMatrixData::ConfigType *config,
+                               android::DrmDevice *drm, uint32_t &blobId);
+    static int32_t degamma(const uint64_t drmLutSize,
+                           const GsInterfaceType::IDqe::DegammaLutData::ConfigType *config,
+                           android::DrmDevice *drm, uint32_t &blobId);
+    static int32_t linearMatrix(const GsInterfaceType::IDqe::DqeMatrixData::ConfigType *config,
                                 android::DrmDevice *drm, uint32_t &blobId);
-     static int32_t degamma(const uint64_t drmLutSize,
-                            const GsInterfaceType::IDqe::DegammaLutData::ConfigType *config,
-                            android::DrmDevice *drm, uint32_t &blobId);
-     static int32_t linearMatrix(const GsInterfaceType::IDqe::DqeMatrixData::ConfigType *config,
+    static int32_t cgc(const GsInterfaceType::IDqe::CgcData::ConfigType *config,
+                       android::DrmDevice *drm, uint32_t &blobId);
+    static int32_t cgcDither(const GsInterfaceType::IDqe::DqeControlData::ConfigType *config,
+                             android::DrmDevice *drm, uint32_t &blobId);
+    static int32_t regamma(const uint64_t drmLutSize,
+                           const GsInterfaceType::IDqe::RegammaLutData::ConfigType *config,
+                           android::DrmDevice *drm, uint32_t &blobId);
+    static int32_t displayDither(const GsInterfaceType::IDqe::DqeControlData::ConfigType *config,
                                  android::DrmDevice *drm, uint32_t &blobId);
-     static int32_t cgc(const GsInterfaceType::IDqe::CgcData::ConfigType *config,
-                        android::DrmDevice *drm, uint32_t &blobId);
-     static int32_t cgcDither(const GsInterfaceType::IDqe::DqeControlData::ConfigType *config,
-                              android::DrmDevice *drm, uint32_t &blobId);
-     static int32_t regamma(const uint64_t drmLutSize,
-                            const GsInterfaceType::IDqe::RegammaLutData::ConfigType *config,
-                            android::DrmDevice *drm, uint32_t &blobId);
-     static int32_t displayDither(const GsInterfaceType::IDqe::DqeControlData::ConfigType *config,
-                                  android::DrmDevice *drm, uint32_t &blobId);
 };
 
 } // namespace gs
