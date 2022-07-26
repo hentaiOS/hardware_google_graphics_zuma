@@ -181,7 +181,31 @@ int32_t ColorDrmBlobFactory::cgcDither(
 int32_t ColorDrmBlobFactory::regamma(
         const uint64_t drmLutSize, const GsInterfaceType::IDqe::RegammaLutData::ConfigType *config,
         DrmDevice *drm, uint32_t &blobId) {
-    // TODO b/224984505: libdisplaycolor:Add Zuma support: DQE
+    if (config == nullptr) {
+        ALOGE("no regamma config");
+        return -EINVAL;
+    }
+
+    using ConfigType = typename GsInterfaceType::IDqe::RegammaLutData::ConfigType;
+    if (drmLutSize != ConfigType::kChannelLutLen * 2) {
+        ALOGE("regamma lut size mismatch");
+        return -EINVAL;
+    }
+
+    struct drm_color_lut colorLut[ConfigType::kChannelLutLen * 2];
+    for (uint32_t i = 0; i < ConfigType::kChannelLutLen; i++) {
+        colorLut[i].red = config->r_values.posx[i];
+        colorLut[i].green = config->g_values.posx[i];
+        colorLut[i].blue = config->b_values.posx[i];
+        colorLut[i + ConfigType::kChannelLutLen].red = config->r_values.posy[i];
+        colorLut[i + ConfigType::kChannelLutLen].green = config->g_values.posy[i];
+        colorLut[i + ConfigType::kChannelLutLen].blue = config->b_values.posy[i];
+    }
+    int ret = drm->CreatePropertyBlob(colorLut, sizeof(colorLut), &blobId);
+    if (ret) {
+        ALOGE("Failed to create regamma lut blob %d", ret);
+        return ret;
+    }
     return NO_ERROR;
 }
 
