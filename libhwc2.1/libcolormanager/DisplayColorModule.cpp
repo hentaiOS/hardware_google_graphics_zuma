@@ -14,23 +14,21 @@
  * limitations under the License.
  */
 
-#include <drm/samsung_drm.h>
 #include "DisplayColorModule.h"
+
+#include <drm/samsung_drm.h>
 
 using namespace android;
 namespace gs {
 
 template <typename T, typename M>
-int32_t convertDqeMatrixDataToDrmMatrix(T &colorMatrix, M &mat,
-                                     uint32_t dimension) {
+int32_t convertDqeMatrixDataToDrmMatrix(T &colorMatrix, M &mat, uint32_t dimension) {
     if (colorMatrix.coeffs.size() != (dimension * dimension)) {
-        ALOGE("Invalid coeff size(%zu)",
-                colorMatrix.coeffs.size());
+        ALOGE("Invalid coeff size(%zu)", colorMatrix.coeffs.size());
         return -EINVAL;
     }
     if (colorMatrix.offsets.size() != dimension) {
-        ALOGE("Invalid offset size(%zu)",
-                colorMatrix.offsets.size());
+        ALOGE("Invalid offset size(%zu)", colorMatrix.offsets.size());
         return -EINVAL;
     }
 
@@ -46,25 +44,25 @@ int32_t convertDqeMatrixDataToDrmMatrix(T &colorMatrix, M &mat,
 }
 
 int32_t ColorDrmBlobFactory::eotf(const GsInterfaceType::IDpp::EotfData::ConfigType *config,
-                               DrmDevice *drm, uint32_t &blobId) {
+                                  DrmDevice *drm, uint32_t &blobId) {
     // TODO b/238217456: libdisplaycolor:Add Zuma support: DPUF
     return NO_ERROR;
 }
 
 int32_t ColorDrmBlobFactory::gm(const GsInterfaceType::IDpp::GmData::ConfigType *config,
-                             DrmDevice *drm, uint32_t &blobId) {
+                                DrmDevice *drm, uint32_t &blobId) {
     // TODO b/238217456: libdisplaycolor:Add Zuma support: DPUF
     return NO_ERROR;
 }
 
 int32_t ColorDrmBlobFactory::dtm(const GsInterfaceType::IDpp::DtmData::ConfigType *config,
-                              DrmDevice *drm, uint32_t &blobId) {
+                                 DrmDevice *drm, uint32_t &blobId) {
     // TODO b/238217456: libdisplaycolor:Add Zuma support: DPUF
     return NO_ERROR;
 }
 
 int32_t ColorDrmBlobFactory::oetf(const GsInterfaceType::IDpp::OetfData::ConfigType *config,
-                               DrmDevice *drm, uint32_t &blobId) {
+                                  DrmDevice *drm, uint32_t &blobId) {
     // TODO b/238217456: libdisplaycolor:Add Zuma support: DPUF
     return NO_ERROR;
 }
@@ -75,7 +73,7 @@ int32_t ColorDrmBlobFactory::gammaMatrix(
     int ret = 0;
     struct exynos_matrix gammaMatrix;
     if ((ret = convertDqeMatrixDataToDrmMatrix(config->matrix_data, gammaMatrix,
-                                            DRM_SAMSUNG_MATRIX_DIMENS)) != NO_ERROR) {
+                                               DRM_SAMSUNG_MATRIX_DIMENS)) != NO_ERROR) {
         ALOGE("Failed to convert gamma matrix");
         return ret;
     }
@@ -88,10 +86,29 @@ int32_t ColorDrmBlobFactory::gammaMatrix(
     return NO_ERROR;
 }
 
-int32_t ColorDrmBlobFactory::degamma(const uint64_t drmLutSize,
-        const GsInterfaceType::IDqe::DegammaLutData::ConfigType *config, DrmDevice *drm,
-        uint32_t &blobId) {
-    // TODO b/224984505: libdisplaycolor:Add Zuma support: DQE
+int32_t ColorDrmBlobFactory::degamma(
+        const uint64_t drmLutSize, const GsInterfaceType::IDqe::DegammaLutData::ConfigType *config,
+        DrmDevice *drm, uint32_t &blobId) {
+    if (config == nullptr) {
+        ALOGE("no degamma config");
+        return -EINVAL;
+    }
+    using ConfigType = typename GsInterfaceType::IDqe::DegammaLutData::ConfigType;
+    if (drmLutSize != ConfigType::kLutLen * 2) {
+        ALOGE("degamma lut size mismatch");
+        return -EINVAL;
+    }
+
+    struct drm_color_lut colorLut[ConfigType::kLutLen * 2];
+    for (uint32_t i = 0; i < ConfigType::kLutLen; i++) {
+        colorLut[i].red = config->values.posx[i];
+        colorLut[i + ConfigType::kLutLen].red = config->values.posy[i];
+    }
+    int ret = drm->CreatePropertyBlob(colorLut, sizeof(colorLut), &blobId);
+    if (ret) {
+        ALOGE("Failed to create degamma lut blob %d", ret);
+        return ret;
+    }
     return NO_ERROR;
 }
 
@@ -101,7 +118,7 @@ int32_t ColorDrmBlobFactory::linearMatrix(
     int ret = 0;
     struct exynos_matrix linear_matrix;
     if ((ret = convertDqeMatrixDataToDrmMatrix(config->matrix_data, linear_matrix,
-                                            DRM_SAMSUNG_MATRIX_DIMENS)) != NO_ERROR) {
+                                               DRM_SAMSUNG_MATRIX_DIMENS)) != NO_ERROR) {
         ALOGE("Failed to convert linear matrix");
         return ret;
     }
@@ -161,9 +178,9 @@ int32_t ColorDrmBlobFactory::cgcDither(
     return NO_ERROR;
 }
 
-int32_t ColorDrmBlobFactory::regamma(const uint64_t drmLutSize,
-        const GsInterfaceType::IDqe::RegammaLutData::ConfigType *config, DrmDevice *drm,
-        uint32_t &blobId) {
+int32_t ColorDrmBlobFactory::regamma(
+        const uint64_t drmLutSize, const GsInterfaceType::IDqe::RegammaLutData::ConfigType *config,
+        DrmDevice *drm, uint32_t &blobId) {
     // TODO b/224984505: libdisplaycolor:Add Zuma support: DQE
     return NO_ERROR;
 }
