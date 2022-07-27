@@ -19,7 +19,9 @@
 
 #include "../../gs201/libhwc2.1/ExynosHWCModule.h"
 
-const dpp_channel_map_t zuma_idma_channel_map[] = {
+namespace zuma {
+
+static const dpp_channel_map_t idma_channel_map[] = {
     /* GF physical index is switched to change assign order */
     /* DECON_IDMA is not used */
     {MPP_DPP_GFS,     0, IDMA(0),   IDMA(0)},
@@ -39,12 +41,8 @@ const dpp_channel_map_t zuma_idma_channel_map[] = {
     {MPP_P_TYPE_MAX,  0, IDMA(14),  IDMA(14)}, // not idma but..
     {static_cast<mpp_phycal_type_t>(MAX_DECON_DMA_TYPE), 0, MAX_DECON_DMA_TYPE, IDMA(7)}
 };
-#ifdef IDMA_CHANNEL_MAP
-#undef IDMA_CHANNEL_MAP
-#endif
-#define IDMA_CHANNEL_MAP zuma_idma_channel_map
 
-const exynos_mpp_t zuma_available_otf_mpp_units[] = {
+static const exynos_mpp_t available_otf_mpp_units[] = {
     {MPP_DPP_GFS, MPP_LOGICAL_DPP_GFS, "DPP_GFS0", 0, 0, HWC_DISPLAY_PRIMARY_BIT},
     {MPP_DPP_GFS, MPP_LOGICAL_DPP_GFS, "DPP_GFS1", 1, 0, HWC_DISPLAY_PRIMARY_BIT},
     {MPP_DPP_GFS, MPP_LOGICAL_DPP_GFS, "DPP_GFS2", 2, 0, HWC_DISPLAY_SECONDARY_BIT},
@@ -61,9 +59,7 @@ const exynos_mpp_t zuma_available_otf_mpp_units[] = {
     {MPP_DPP_VGRFS, MPP_LOGICAL_DPP_VGRFS, "DPP_VGRFS5", 5, 0, HWC_DISPLAY_PRIMARY_BIT},
 
 };
-#ifdef AVAILABLE_OTF_MPP_UNITS
-#undef AVAILABLE_OTF_MPP_UNITS
-#endif
-#define AVAILABLE_OTF_MPP_UNITS zuma_available_otf_mpp_units
+
+} // namespace zuma
 
 #endif // ANDROID_EXYNOS_HWC_MODULE_ZUMA_H_
