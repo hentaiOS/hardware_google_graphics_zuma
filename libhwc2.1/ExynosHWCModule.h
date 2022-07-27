@@ -21,6 +21,9 @@
 
 namespace zuma {
 
+static const char *early_wakeup_node_0_base =
+    "/sys/devices/platform/19470000.drmdecon/early_wakeup";
+
 static const dpp_channel_map_t idma_channel_map[] = {
     /* GF physical index is switched to change assign order */
     /* DECON_IDMA is not used */
