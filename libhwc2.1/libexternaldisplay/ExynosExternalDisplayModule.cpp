@@ -31,37 +31,5 @@ ExynosExternalDisplayModule::~ExynosExternalDisplayModule ()
 
 int32_t ExynosExternalDisplayModule::validateWinConfigData()
 {
-    bool flagValidConfig = true;
-
-    if (ExynosDisplay::validateWinConfigData() != NO_ERROR)
-        flagValidConfig = false;
-
-    for (size_t i = 0; i < mDpuData.configs.size(); i++) {
-        struct exynos_win_config_data &config = mDpuData.configs[i];
-        if (config.state == config.WIN_STATE_BUFFER) {
-            bool configInvalid = false;
-            uint32_t mppType = config.assignedMPP->mPhysicalType;
-            if ((config.src.w != config.dst.w) ||
-                (config.src.h != config.dst.h)) {
-                if ((mppType == MPP_DPP_GF) ||
-                    (mppType == MPP_DPP_GFS) ||
-                    (mppType == MPP_DPP_VG) ||
-                    (mppType == MPP_DPP_VGF) ||
-                    (mppType == MPP_DPP_VGRFS)) {
-                    DISPLAY_LOGE("WIN_CONFIG error: invalid assign id : "
-                       "id:%zu, s_w:%d, d_w:%d, s_h:%d, d_h:%d, mppType:%d",
-                        i, config.src.w, config.dst.w, config.src.h, config.dst.h, mppType);
-                    configInvalid = true;
-                }
-            }
-            if (configInvalid) {
-                config.state = config.WIN_STATE_DISABLED;
-                flagValidConfig = false;
-            }
-        }
-    }
-    if (flagValidConfig)
-        return NO_ERROR;
-    else
-        return -EINVAL;
+    return ExynosDisplay::validateWinConfigData();
 }
