@@ -14,20 +14,4 @@
  * limitations under the License.
  */
 
-#ifndef HISTOGRAM_H_
-#define HISTOGRAM_H_
-
-#include <aidl/com/google/hardware/pixel/display/HistogramPos.h>
-
-#include "histogram/HistogramInfo.h"
-#include "histogram/histogram_control.h"
-using HistogramPos = ::aidl::com::google::hardware::pixel::display::HistogramPos;
-
-class IDLHistogram : public HistogramInfo {
-public:
-    IDLHistogram() : HistogramInfo(HistogramType::HISTOGRAM_HIDL) {}
-    virtual ~IDLHistogram() {}
-    virtual void setHistogramPos(HistogramPos pos) {}
-};
-
-#endif // HISTOGRAM_H_
+#include "../../gs201/histogram/histogram.h"
