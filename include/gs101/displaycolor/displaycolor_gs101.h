@@ -14,9 +14,4 @@
  * limitations under the License.
  */
 
-#ifndef DISPLAYCOLOR_ZUMA_H_
-#define DISPLAYCOLOR_ZUMA_H_
-
-#include "../../gs201/include/gs101/displaycolor/displaycolor_gs101.h"
-
-#endif  // DISPLAYCOLOR_ZUMA_H_
+#include "../../gs101/include/gs101/displaycolor/displaycolor_gs101.h"
