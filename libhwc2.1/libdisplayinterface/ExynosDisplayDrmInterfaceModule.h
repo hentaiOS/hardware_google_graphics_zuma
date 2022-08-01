@@ -19,19 +19,13 @@
 
 #include <drm/samsung_drm.h>
 
-#include "../../gs101/libhwc2.1/libdisplayinterface/ExynosDisplayDrmInterfaceModule.h"
+#include "../../gs201/libhwc2.1/libdisplayinterface/ExynosDisplayDrmInterfaceModule.h"
 
 namespace zuma {
 
-/*
- * TODO: Zuma CGC DMA changes in kernel are yet to be implemented.
- *       Deriving from gs101 until implementation is complete.
- *       Bug: 219110321
- */
+using ExynosPrimaryDisplayDrmInterfaceModule = gs201::ExynosPrimaryDisplayDrmInterfaceModule;
+using ExynosExternalDisplayDrmInterfaceModule = gs201::ExynosExternalDisplayDrmInterfaceModule;
 
-using ExynosPrimaryDisplayDrmInterfaceModule = gs101::ExynosPrimaryDisplayDrmInterfaceModule;
-using ExynosExternalDisplayDrmInterfaceModule = gs101::ExynosExternalDisplayDrmInterfaceModule;
-
-}  // namespace zuma
+} // namespace zuma
 
 #endif // EXYNOS_DISPLAY_DRM_INTERFACE_MODULE_ZUMA_H
