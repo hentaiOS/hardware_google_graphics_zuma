@@ -34,15 +34,15 @@ static const dpp_channel_map_t idma_channel_map[] = {
     {MPP_DPP_GFS,     2, IDMA(4),   IDMA(4)},
     {MPP_DPP_VGRFS,   2, IDMA(5),   IDMA(5)},
     {MPP_DPP_GFS,     3, IDMA(6),   IDMA(6)},
-    {MPP_DPP_GFS,     4, IDMA(8),   IDMA(8)},
-    {MPP_DPP_VGRFS,   3, IDMA(9),   IDMA(9)},
-    {MPP_DPP_GFS,     5, IDMA(10),  IDMA(10)},
-    {MPP_DPP_VGRFS,   4, IDMA(11),  IDMA(11)},
-    {MPP_DPP_GFS,     6, IDMA(12),  IDMA(12)},
-    {MPP_DPP_VGRFS,   5, IDMA(13),  IDMA(13)},
-    {MPP_DPP_GFS,     7, IDMA(14),  IDMA(14)},
+    {MPP_DPP_GFS,     4, IDMA(7),   IDMA(7)},
+    {MPP_DPP_VGRFS,   3, IDMA(8),   IDMA(8)},
+    {MPP_DPP_GFS,     5, IDMA(9),   IDMA(9)},
+    {MPP_DPP_VGRFS,   4, IDMA(10),  IDMA(10)},
+    {MPP_DPP_GFS,     6, IDMA(11),  IDMA(11)},
+    {MPP_DPP_VGRFS,   5, IDMA(12),  IDMA(12)},
+    {MPP_DPP_GFS,     7, IDMA(13),  IDMA(13)},
     {MPP_P_TYPE_MAX,  0, IDMA(14),  IDMA(14)}, // not idma but..
-    {static_cast<mpp_phycal_type_t>(MAX_DECON_DMA_TYPE), 0, MAX_DECON_DMA_TYPE, IDMA(7)}
+    {static_cast<mpp_phycal_type_t>(MAX_DECON_DMA_TYPE), 0, MAX_DECON_DMA_TYPE, IDMA(14)}
 };
 
 static const exynos_mpp_t available_otf_mpp_units[] = {
