@@ -18,11 +18,35 @@
 #define ANDROID_EXYNOS_HWC_MODULE_ZUMA_H_
 
 #include "../../gs201/libhwc2.1/ExynosHWCModule.h"
+#include "ExynosHWCHelper.h"
 
 namespace zuma {
 
 static const char *early_wakeup_node_0_base =
     "/sys/devices/platform/19470000.drmdecon/early_wakeup";
+
+typedef enum assignOrderType {
+    ORDER_AFBC,
+    ORDER_WCG,
+    ORDER_AXI,
+} assignOrderType_t;
+
+typedef enum DPUblockId {
+    DPUF0,
+    DPUF1,
+    DPU_BLOCK_CNT,
+} DPUblockId_t;
+
+const std::unordered_map<DPUblockId_t, String8> DPUBlocks = {
+    {DPUF0, String8("DPUF0")},
+    {DPUF1, String8("DPUF1")},
+};
+
+typedef enum AXIPortId {
+    AXI0,
+    AXI1,
+    AXI_PORT_CNT,
+} AXIPortId_t;
 
 static const dpp_channel_map_t idma_channel_map[] = {
     /* GF physical index is switched to change assign order */
@@ -42,27 +66,296 @@ static const dpp_channel_map_t idma_channel_map[] = {
     {MPP_DPP_VGRFS,   5, IDMA(12),  IDMA(12)},
     {MPP_DPP_GFS,     7, IDMA(13),  IDMA(13)},
     {MPP_P_TYPE_MAX,  0, IDMA(14),  IDMA(14)}, // not idma but..
-    {static_cast<mpp_phycal_type_t>(MAX_DECON_DMA_TYPE), 0, MAX_DECON_DMA_TYPE, IDMA(14)}
+    {static_cast<mpp_phycal_type_t>(MAX_DECON_DMA_TYPE), 0, MAX_DECON_DMA_TYPE,
+        IDMA(ODMA_WB + 1)}
 };
 
 static const exynos_mpp_t available_otf_mpp_units[] = {
-    {MPP_DPP_GFS, MPP_LOGICAL_DPP_GFS, "DPP_GFS0", 0, 0, HWC_DISPLAY_PRIMARY_BIT},
-    {MPP_DPP_GFS, MPP_LOGICAL_DPP_GFS, "DPP_GFS1", 1, 0, HWC_DISPLAY_PRIMARY_BIT},
-    {MPP_DPP_GFS, MPP_LOGICAL_DPP_GFS, "DPP_GFS2", 2, 0, HWC_DISPLAY_SECONDARY_BIT},
-    {MPP_DPP_GFS, MPP_LOGICAL_DPP_GFS, "DPP_GFS3", 3, 0, HWC_DISPLAY_SECONDARY_BIT},
-    {MPP_DPP_GFS, MPP_LOGICAL_DPP_GFS, "DPP_GFS4", 4, 0, HWC_DISPLAY_SECONDARY_BIT},
-    {MPP_DPP_GFS, MPP_LOGICAL_DPP_GFS, "DPP_GFS5", 5, 0, HWC_DISPLAY_SECONDARY_BIT},
-    {MPP_DPP_GFS, MPP_LOGICAL_DPP_GFS, "DPP_GFS6", 6, 0, HWC_DISPLAY_SECONDARY_BIT},
-    {MPP_DPP_GFS, MPP_LOGICAL_DPP_GFS, "DPP_GFS7", 7, 0, HWC_DISPLAY_SECONDARY_BIT},
-    {MPP_DPP_VGRFS, MPP_LOGICAL_DPP_VGRFS, "DPP_VGRFS0", 0, 0, HWC_DISPLAY_PRIMARY_BIT},
-    {MPP_DPP_VGRFS, MPP_LOGICAL_DPP_VGRFS, "DPP_VGRFS1", 1, 0, HWC_DISPLAY_PRIMARY_BIT},
-    {MPP_DPP_VGRFS, MPP_LOGICAL_DPP_VGRFS, "DPP_VGRFS2", 2, 0, HWC_DISPLAY_PRIMARY_BIT},
-    {MPP_DPP_VGRFS, MPP_LOGICAL_DPP_VGRFS, "DPP_VGRFS3", 3, 0, HWC_DISPLAY_PRIMARY_BIT},
-    {MPP_DPP_VGRFS, MPP_LOGICAL_DPP_VGRFS, "DPP_VGRFS4", 4, 0, HWC_DISPLAY_PRIMARY_BIT},
-    {MPP_DPP_VGRFS, MPP_LOGICAL_DPP_VGRFS, "DPP_VGRFS5", 5, 0, HWC_DISPLAY_PRIMARY_BIT},
+    // Zuma has 8ea Graphics-Only Layers
+    // Zuma has 6ea Video-Graphics Layers
+    // Zuma has total 14ea Layers
 
+    // DPP0(IDMA_GFS0) in DPUF0 is connected with AXI0 port
+    {MPP_DPP_GFS, MPP_LOGICAL_DPP_GFS, "DPP_GFS0", 0, 0, HWC_DISPLAY_PRIMARY_BIT,
+        static_cast<uint32_t>(DPUF0), static_cast<uint32_t>(AXI0)},
+    // DPP1(IDMA_VGRFS0) in DPUF0 is connected with AXI0 port
+    {MPP_DPP_VGRFS, MPP_LOGICAL_DPP_VGRFS, "DPP_VGRFS0", 0, 0, HWC_DISPLAY_PRIMARY_BIT,
+        static_cast<uint32_t>(DPUF0), static_cast<uint32_t>(AXI0)},
+    // DPP2(IDMA_GFS1) in DPUF0 is connected with AXI0 port
+    {MPP_DPP_GFS, MPP_LOGICAL_DPP_GFS, "DPP_GFS1", 1, 0, HWC_DISPLAY_PRIMARY_BIT,
+        static_cast<uint32_t>(DPUF0), static_cast<uint32_t>(AXI0)},
+    // DPP3(IDMA_VGRFS1) in DPUF0 is connected with AXI0 port
+    {MPP_DPP_VGRFS, MPP_LOGICAL_DPP_VGRFS, "DPP_VGRFS1", 1, 0, HWC_DISPLAY_PRIMARY_BIT,
+        static_cast<uint32_t>(DPUF0), static_cast<uint32_t>(AXI0)},
+
+    // DPP4(IDMA_GFS2) in DPUF0 is connected with AXI1 port
+    {MPP_DPP_GFS, MPP_LOGICAL_DPP_GFS, "DPP_GFS2", 2, 0, HWC_DISPLAY_PRIMARY_BIT,
+        static_cast<uint32_t>(DPUF0), static_cast<uint32_t>(AXI1)},
+    // DPP5(IDMA_VGRFS2) in DPUF0 is connected with AXI1 port
+    {MPP_DPP_VGRFS, MPP_LOGICAL_DPP_VGRFS, "DPP_VGRFS2", 2, 0, HWC_DISPLAY_PRIMARY_BIT,
+        static_cast<uint32_t>(DPUF0), static_cast<uint32_t>(AXI1)},
+    // DPP6(IDMA_GFS3) in DPUF0 is connected with AXI1 port
+    {MPP_DPP_GFS, MPP_LOGICAL_DPP_GFS, "DPP_GFS3", 3, 0, HWC_DISPLAY_PRIMARY_BIT,
+        static_cast<uint32_t>(DPUF0), static_cast<uint32_t>(AXI1)},
+
+    // DPP7(IDMA_GFS4) in DPUF1 is connected with AXI1 port
+    {MPP_DPP_GFS, MPP_LOGICAL_DPP_GFS, "DPP_GFS4", 4, 0, HWC_DISPLAY_SECONDARY_BIT,
+        static_cast<uint32_t>(DPUF1), static_cast<uint32_t>(AXI1)},
+    // DPP8(IDMA_VGRFS3) in DPUF1 is connected with AXI1 port
+    {MPP_DPP_VGRFS, MPP_LOGICAL_DPP_VGRFS, "DPP_VGRFS3", 3, 0, HWC_DISPLAY_SECONDARY_BIT,
+        static_cast<uint32_t>(DPUF1), static_cast<uint32_t>(AXI1)},
+    // DPP9(IDMA_GFS5) in DPUF1 is connected with AXI1 port
+    {MPP_DPP_GFS, MPP_LOGICAL_DPP_GFS, "DPP_GFS5", 5, 0, HWC_DISPLAY_SECONDARY_BIT,
+        static_cast<uint32_t>(DPUF1), static_cast<uint32_t>(AXI1)},
+    // DPP10(IDMA_VGRFS4) in DPUF1 is connected with AXI1 port
+    {MPP_DPP_VGRFS, MPP_LOGICAL_DPP_VGRFS, "DPP_VGRFS4", 4, 0, HWC_DISPLAY_SECONDARY_BIT,
+        static_cast<uint32_t>(DPUF1), static_cast<uint32_t>(AXI1)},
+
+    // DPP11(IDMA_GFS6) in DPUF1 is connected with AXI0 port
+    {MPP_DPP_GFS, MPP_LOGICAL_DPP_GFS, "DPP_GFS6", 6, 0, HWC_DISPLAY_SECONDARY_BIT,
+        static_cast<uint32_t>(DPUF1), static_cast<uint32_t>(AXI0)},
+    // DPP12(IDMA_VGRFS5) in DPUF1 is connected with AXI0 port
+    {MPP_DPP_VGRFS, MPP_LOGICAL_DPP_VGRFS, "DPP_VGRFS5", 5, 0, HWC_DISPLAY_SECONDARY_BIT,
+        static_cast<uint32_t>(DPUF1), static_cast<uint32_t>(AXI0)},
+    // DPP13(IDMA_GFS7) in DPUF1 is connected with AXI0 port
+    {MPP_DPP_GFS, MPP_LOGICAL_DPP_GFS, "DPP_GFS7", 7, 0, HWC_DISPLAY_SECONDARY_BIT,
+        static_cast<uint32_t>(DPUF1), static_cast<uint32_t>(AXI0)},
 };
 
+/*
+ * Note :
+ * When External or Virtual display is connected,
+ * Primary amount = total - others
+ */
+class HWResourceIndexes {
+    private:
+        tdm_attr_t attr;
+        DPUblockId_t DPUBlockNo;
+        int displayId;
+
+    public:
+        HWResourceIndexes(tdm_attr_t _attr, DPUblockId_t _DPUBlockNo, int _displayId)
+            : attr(_attr), DPUBlockNo(_DPUBlockNo), displayId(_displayId) {}
+        bool operator<(const HWResourceIndexes& rhs) const {
+            if (attr != rhs.attr) return attr < rhs.attr;
+
+            if (DPUBlockNo != rhs.DPUBlockNo) return DPUBlockNo < rhs.DPUBlockNo;
+
+            if (displayId != rhs.displayId) return displayId < rhs.displayId;
+
+            return false;
+        }
+};
+
+typedef struct HWResourceAmounts {
+    int maxAssignedAmount;
+    int totalAmount;
+} HWResourceAmounts_t;
+
+/* Note :
+ * When External or Virtual display is connected,
+ * Primary amount = total - others */
+
+const std::map<HWResourceIndexes, HWResourceAmounts_t> HWResourceTables = {
+    {HWResourceIndexes(TDM_ATTR_SRAM_AMOUNT, DPUF0, HWC_DISPLAY_PRIMARY),  {0, 80}},
+    {HWResourceIndexes(TDM_ATTR_SRAM_AMOUNT, DPUF0, HWC_DISPLAY_EXTERNAL), {80, 80}},
+    {HWResourceIndexes(TDM_ATTR_SRAM_AMOUNT, DPUF0, HWC_DISPLAY_VIRTUAL),  {80, 80}},
+    {HWResourceIndexes(TDM_ATTR_SRAM_AMOUNT, DPUF1, HWC_DISPLAY_PRIMARY),  {80, 80}},
+    {HWResourceIndexes(TDM_ATTR_SRAM_AMOUNT, DPUF1, HWC_DISPLAY_EXTERNAL), {0, 80}},
+    {HWResourceIndexes(TDM_ATTR_SRAM_AMOUNT, DPUF1, HWC_DISPLAY_VIRTUAL),  {0, 80}},
+
+    {HWResourceIndexes(TDM_ATTR_SCALE, DPUF0, HWC_DISPLAY_PRIMARY),  {0, 2}},
+    {HWResourceIndexes(TDM_ATTR_SCALE, DPUF0, HWC_DISPLAY_EXTERNAL), {2, 2}},
+    {HWResourceIndexes(TDM_ATTR_SCALE, DPUF0, HWC_DISPLAY_VIRTUAL),  {2, 2}},
+    {HWResourceIndexes(TDM_ATTR_SCALE, DPUF1, HWC_DISPLAY_PRIMARY),  {2, 2}},
+    {HWResourceIndexes(TDM_ATTR_SCALE, DPUF1, HWC_DISPLAY_EXTERNAL), {0, 2}},
+    {HWResourceIndexes(TDM_ATTR_SCALE, DPUF1, HWC_DISPLAY_VIRTUAL),  {0, 2}},
+
+    {HWResourceIndexes(TDM_ATTR_SBWC, DPUF0, HWC_DISPLAY_PRIMARY),  {0, 2}},
+    {HWResourceIndexes(TDM_ATTR_SBWC, DPUF0, HWC_DISPLAY_EXTERNAL), {2, 2}},
+    {HWResourceIndexes(TDM_ATTR_SBWC, DPUF0, HWC_DISPLAY_VIRTUAL),  {2, 2}},
+    {HWResourceIndexes(TDM_ATTR_SBWC, DPUF1, HWC_DISPLAY_PRIMARY),  {2, 2}},
+    {HWResourceIndexes(TDM_ATTR_SBWC, DPUF1, HWC_DISPLAY_EXTERNAL), {0, 2}},
+    {HWResourceIndexes(TDM_ATTR_SBWC, DPUF1, HWC_DISPLAY_VIRTUAL),  {0, 2}},
+
+    {HWResourceIndexes(TDM_ATTR_AFBC, DPUF0, HWC_DISPLAY_PRIMARY),  {0, 4}},
+    {HWResourceIndexes(TDM_ATTR_AFBC, DPUF0, HWC_DISPLAY_EXTERNAL), {4, 4}},
+    {HWResourceIndexes(TDM_ATTR_AFBC, DPUF0, HWC_DISPLAY_VIRTUAL),  {4, 4}},
+    {HWResourceIndexes(TDM_ATTR_AFBC, DPUF1, HWC_DISPLAY_PRIMARY),  {4, 4}},
+    {HWResourceIndexes(TDM_ATTR_AFBC, DPUF1, HWC_DISPLAY_EXTERNAL), {0, 4}},
+    {HWResourceIndexes(TDM_ATTR_AFBC, DPUF1, HWC_DISPLAY_VIRTUAL),  {0, 4}},
+
+    {HWResourceIndexes(TDM_ATTR_ITP, DPUF0, HWC_DISPLAY_PRIMARY),  {0, 4}},
+    {HWResourceIndexes(TDM_ATTR_ITP, DPUF0, HWC_DISPLAY_EXTERNAL), {4, 4}},
+    {HWResourceIndexes(TDM_ATTR_ITP, DPUF0, HWC_DISPLAY_VIRTUAL),  {4, 4}},
+    {HWResourceIndexes(TDM_ATTR_ITP, DPUF1, HWC_DISPLAY_PRIMARY),  {4, 4}},
+    {HWResourceIndexes(TDM_ATTR_ITP, DPUF1, HWC_DISPLAY_EXTERNAL), {0, 4}},
+    {HWResourceIndexes(TDM_ATTR_ITP, DPUF1, HWC_DISPLAY_VIRTUAL),  {0, 4}},
+
+    {HWResourceIndexes(TDM_ATTR_ROT_90, DPUF0, HWC_DISPLAY_PRIMARY),  {0, 2}},
+    {HWResourceIndexes(TDM_ATTR_ROT_90, DPUF0, HWC_DISPLAY_EXTERNAL), {2, 2}},
+    {HWResourceIndexes(TDM_ATTR_ROT_90, DPUF0, HWC_DISPLAY_VIRTUAL),  {2, 2}},
+    {HWResourceIndexes(TDM_ATTR_ROT_90, DPUF1, HWC_DISPLAY_PRIMARY),  {2, 2}},
+    {HWResourceIndexes(TDM_ATTR_ROT_90, DPUF1, HWC_DISPLAY_EXTERNAL), {0, 2}},
+    {HWResourceIndexes(TDM_ATTR_ROT_90, DPUF1, HWC_DISPLAY_VIRTUAL),  {0, 2}},
+};
+
+typedef enum lbWidthIndex {
+    LB_W_8_512,
+    LB_W_513_1024,
+    LB_W_1025_1536,
+    LB_W_1537_2048,
+    LB_W_2049_2304,
+    LB_W_2305_2560,
+    LB_W_2561_3072,
+    LB_W_3073_INF,
+} lbWidthIndex_t;
+
+typedef struct lbWidthBoundary {
+    uint32_t widthDownto;
+    uint32_t widthUpto;
+} lbWidthBoundary_t;
+
+const std::map<lbWidthIndex_t, lbWidthBoundary_t> LB_WIDTH_INDEX_MAP = {
+    {LB_W_8_512,     {8, 512}},
+    {LB_W_513_1024,  {513, 1024}},
+    {LB_W_1025_1536, {1025, 1536}},
+    {LB_W_1537_2048, {1537, 2048}},
+    {LB_W_2049_2304, {2049, 2304}},
+    {LB_W_2305_2560, {2035, 2560}},
+    {LB_W_2561_3072, {2561, 3072}},
+    {LB_W_3073_INF,  {3073, 0xffff}},
+};
+
+class sramAmountParams {
+private:
+    tdm_attr_t attr;
+    uint32_t formatProperty;
+    lbWidthIndex_t widthIndex;
+
+public:
+    sramAmountParams(tdm_attr_t _attr, uint32_t _formatProperty, lbWidthIndex_t _widthIndex)
+          : attr(_attr), formatProperty(_formatProperty), widthIndex(_widthIndex) {}
+    bool operator<(const sramAmountParams& rhs) const {
+        if (attr != rhs.attr) return attr < rhs.attr;
+
+        if (formatProperty != rhs.formatProperty) return formatProperty < rhs.formatProperty;
+
+        if (widthIndex != rhs.widthIndex) return widthIndex < rhs.widthIndex;
+
+        return false;
+    }
+};
+
+enum {
+    SBWC_Y = 0,
+    SBWC_UV,
+    NON_SBWC_Y,
+    NON_SBWC_UV,
+};
+
+const std::map<sramAmountParams, uint32_t> sramAmountMap = {
+    /** Non rotation **/
+    /** BIT8 = 32bit format **/
+    {sramAmountParams(TDM_ATTR_AFBC, RGB | BIT8, LB_W_8_512),     4},
+    {sramAmountParams(TDM_ATTR_AFBC, RGB | BIT8, LB_W_513_1024),  4},
+    {sramAmountParams(TDM_ATTR_AFBC, RGB | BIT8, LB_W_1025_1536), 8},
+    {sramAmountParams(TDM_ATTR_AFBC, RGB | BIT8, LB_W_1537_2048), 8},
+    {sramAmountParams(TDM_ATTR_AFBC, RGB | BIT8, LB_W_2049_2304), 12},
+    {sramAmountParams(TDM_ATTR_AFBC, RGB | BIT8, LB_W_2305_2560), 12},
+    {sramAmountParams(TDM_ATTR_AFBC, RGB | BIT8, LB_W_2561_3072), 12},
+    {sramAmountParams(TDM_ATTR_AFBC, RGB | BIT8, LB_W_3073_INF),  16},
+
+    /** 16bit format **/
+    {sramAmountParams(TDM_ATTR_AFBC, RGB, LB_W_8_512),     2},
+    {sramAmountParams(TDM_ATTR_AFBC, RGB, LB_W_513_1024),  2},
+    {sramAmountParams(TDM_ATTR_AFBC, RGB, LB_W_1025_1536), 4},
+    {sramAmountParams(TDM_ATTR_AFBC, RGB, LB_W_1537_2048), 4},
+    {sramAmountParams(TDM_ATTR_AFBC, RGB, LB_W_2049_2304), 6},
+    {sramAmountParams(TDM_ATTR_AFBC, RGB, LB_W_2305_2560), 6},
+    {sramAmountParams(TDM_ATTR_AFBC, RGB, LB_W_2561_3072), 6},
+    {sramAmountParams(TDM_ATTR_AFBC, RGB, LB_W_3073_INF),  8},
+
+    {sramAmountParams(TDM_ATTR_SBWC, SBWC_Y, LB_W_8_512),     1},
+    {sramAmountParams(TDM_ATTR_SBWC, SBWC_Y, LB_W_513_1024),  1},
+    {sramAmountParams(TDM_ATTR_SBWC, SBWC_Y, LB_W_1025_1536), 1},
+    {sramAmountParams(TDM_ATTR_SBWC, SBWC_Y, LB_W_1537_2048), 1},
+    {sramAmountParams(TDM_ATTR_SBWC, SBWC_Y, LB_W_2049_2304), 2},
+    {sramAmountParams(TDM_ATTR_SBWC, SBWC_Y, LB_W_2305_2560), 2},
+    {sramAmountParams(TDM_ATTR_SBWC, SBWC_Y, LB_W_2561_3072), 2},
+    {sramAmountParams(TDM_ATTR_SBWC, SBWC_Y, LB_W_3073_INF),  2},
+
+    {sramAmountParams(TDM_ATTR_SBWC, SBWC_UV, LB_W_8_512),     2},
+    {sramAmountParams(TDM_ATTR_SBWC, SBWC_UV, LB_W_513_1024),  2},
+    {sramAmountParams(TDM_ATTR_SBWC, SBWC_UV, LB_W_1025_1536), 2},
+    {sramAmountParams(TDM_ATTR_SBWC, SBWC_UV, LB_W_1537_2048), 2},
+    {sramAmountParams(TDM_ATTR_SBWC, SBWC_UV, LB_W_2049_2304), 2},
+    {sramAmountParams(TDM_ATTR_SBWC, SBWC_UV, LB_W_2305_2560), 2},
+    {sramAmountParams(TDM_ATTR_SBWC, SBWC_UV, LB_W_2561_3072), 2},
+    {sramAmountParams(TDM_ATTR_SBWC, SBWC_UV, LB_W_3073_INF),  2},
+
+    /** Rotation **/
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_Y | BIT8, LB_W_8_512),     4},
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_Y | BIT8, LB_W_513_1024),  8},
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_Y | BIT8, LB_W_1025_1536), 12},
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_Y | BIT8, LB_W_1537_2048), 16},
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_Y | BIT8, LB_W_2049_2304), 18},
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_Y | BIT8, LB_W_2305_2560), 18},
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_Y | BIT8, LB_W_2561_3072), 18},
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_Y | BIT8, LB_W_3073_INF),  18},
+
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_UV | BIT8, LB_W_8_512),     2},
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_UV | BIT8, LB_W_513_1024),  4},
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_UV | BIT8, LB_W_1025_1536), 6},
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_UV | BIT8, LB_W_1537_2048), 8},
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_UV | BIT8, LB_W_2049_2304), 10},
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_UV | BIT8, LB_W_2305_2560), 10},
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_UV | BIT8, LB_W_2561_3072), 10},
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_UV | BIT8, LB_W_3073_INF),  10},
+
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_Y | BIT10, LB_W_8_512),     2},
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_Y | BIT10, LB_W_513_1024),  4},
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_Y | BIT10, LB_W_1025_1536), 6},
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_Y | BIT10, LB_W_1537_2048), 8},
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_Y | BIT10, LB_W_2049_2304), 9},
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_Y | BIT10, LB_W_2305_2560), 9},
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_Y | BIT10, LB_W_2561_3072), 9},
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_Y | BIT10, LB_W_3073_INF),  9},
+
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_UV | BIT10, LB_W_8_512),     2},
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_UV | BIT10, LB_W_513_1024),  2},
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_UV | BIT10, LB_W_1025_1536), 4},
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_UV | BIT10, LB_W_1537_2048), 4},
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_UV | BIT10, LB_W_2049_2304), 6},
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_UV | BIT10, LB_W_2305_2560), 6},
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_UV | BIT10, LB_W_2561_3072), 6},
+    {sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_UV | BIT10, LB_W_3073_INF),  6},
+
+    {sramAmountParams(TDM_ATTR_ROT_90, SBWC_Y, LB_W_8_512),     2},
+    {sramAmountParams(TDM_ATTR_ROT_90, SBWC_Y, LB_W_513_1024),  4},
+    {sramAmountParams(TDM_ATTR_ROT_90, SBWC_Y, LB_W_1025_1536), 6},
+    {sramAmountParams(TDM_ATTR_ROT_90, SBWC_Y, LB_W_1537_2048), 8},
+    {sramAmountParams(TDM_ATTR_ROT_90, SBWC_Y, LB_W_2049_2304), 9},
+    {sramAmountParams(TDM_ATTR_ROT_90, SBWC_Y, LB_W_2305_2560), 9},
+    {sramAmountParams(TDM_ATTR_ROT_90, SBWC_Y, LB_W_2561_3072), 9},
+    {sramAmountParams(TDM_ATTR_ROT_90, SBWC_Y, LB_W_3073_INF),  9},
+
+    {sramAmountParams(TDM_ATTR_ROT_90, SBWC_UV, LB_W_8_512),     2},
+    {sramAmountParams(TDM_ATTR_ROT_90, SBWC_UV, LB_W_513_1024),  2},
+    {sramAmountParams(TDM_ATTR_ROT_90, SBWC_UV, LB_W_1025_1536), 4},
+    {sramAmountParams(TDM_ATTR_ROT_90, SBWC_UV, LB_W_1537_2048), 4},
+    {sramAmountParams(TDM_ATTR_ROT_90, SBWC_UV, LB_W_2049_2304), 6},
+    {sramAmountParams(TDM_ATTR_ROT_90, SBWC_UV, LB_W_2305_2560), 6},
+    {sramAmountParams(TDM_ATTR_ROT_90, SBWC_UV, LB_W_2561_3072), 6},
+    {sramAmountParams(TDM_ATTR_ROT_90, SBWC_UV, LB_W_3073_INF),  6},
+
+    {sramAmountParams(TDM_ATTR_ITP, BIT8, LB_W_3073_INF),  2},
+    {sramAmountParams(TDM_ATTR_ITP, BIT10, LB_W_3073_INF), 2},
+
+    /* It's meaning like ow,
+     * FORMAT_YUV_MASK == has no alpha, FORMAT_RGB_MASK == has alpha */
+    {sramAmountParams(TDM_ATTR_SCALE, FORMAT_YUV_MASK, LB_W_3073_INF), 12},
+    {sramAmountParams(TDM_ATTR_SCALE, FORMAT_RGB_MASK, LB_W_3073_INF), 16}};
 } // namespace zuma
 
 #endif // ANDROID_EXYNOS_HWC_MODULE_ZUMA_H_

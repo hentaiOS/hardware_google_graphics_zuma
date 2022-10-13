@@ -18,7 +18,9 @@ LOCAL_SRC_FILES += \
 	../../$(TARGET_BOARD_PLATFORM)/libhwc2.1/libmaindisplay/ExynosPrimaryDisplayModule.cpp \
 	../../gs101/libhwc2.1/libresource/ExynosMPPModule.cpp \
 	../../gs201/libhwc2.1/libresource/ExynosMPPModule.cpp \
+	../../$(TARGET_BOARD_PLATFORM)/libhwc2.1/libresource/ExynosMPPModule.cpp \
 	../../gs101/libhwc2.1/libresource/ExynosResourceManagerModule.cpp	\
+	../../$(TARGET_BOARD_PLATFORM)/libhwc2.1/libresource/ExynosResourceManagerModule.cpp \
 	../../gs101/libhwc2.1/libexternaldisplay/ExynosExternalDisplayModule.cpp \
 	../../$(TARGET_BOARD_PLATFORM)/libhwc2.1/libexternaldisplay/ExynosExternalDisplayModule.cpp \
 	../../gs101/libhwc2.1/libvirtualdisplay/ExynosVirtualDisplayModule.cpp \

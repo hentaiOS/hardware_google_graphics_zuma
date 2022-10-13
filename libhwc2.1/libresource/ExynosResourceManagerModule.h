@@ -21,7 +21,30 @@
 
 namespace zuma {
 
-using ExynosResourceManagerModule = gs201::ExynosResourceManagerModule;
+class ExynosResourceManagerModule : public gs201::ExynosResourceManagerModule {
+    public:
+        ExynosResourceManagerModule(ExynosDevice *device);
+        ~ExynosResourceManagerModule();
+
+    public:
+        /* TDM (Time-Division Multiplexing) based Resource Management */
+        virtual bool isHWResourceAvailable(ExynosDisplay *display, ExynosMPP *currentMPP,
+                                           ExynosMPPSource *mppSrc);
+        virtual uint32_t setDisplaysTDMInfo();
+        virtual uint32_t initDisplaysTDMInfo();
+        virtual uint32_t calculateHWResourceAmount(ExynosDisplay *display, ExynosMPPSource *mppSrc);
+        virtual int32_t otfMppReordering(ExynosDisplay *display, ExynosMPPVector &otfMPPs,
+                                         struct exynos_image &src, struct exynos_image &dst);
+
+        bool isOverlaped(ExynosDisplay *display, ExynosMPPSource *current,
+                         ExynosMPPSource *compare);
+        uint32_t getAmounts(ExynosDisplay *display, ExynosMPP *otfMPP, uint32_t currentBlockId,
+                            ExynosMPPSource *compare, ExynosMPPSource *current,
+                            std::map<tdm_attr_t, uint32_t> &amounts);
+
+    public:
+        const std::map<HWResourceIndexes, HWResourceAmounts_t> *mHWResourceTables = nullptr;
+};
 
 }  // namespace zuma
 

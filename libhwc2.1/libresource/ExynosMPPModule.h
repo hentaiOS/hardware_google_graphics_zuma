@@ -21,7 +21,14 @@
 
 namespace zuma {
 
-using ExynosMPPModule = gs201::ExynosMPPModule;
+class ExynosMPPModule : public gs201::ExynosMPPModule {
+    public:
+        ExynosMPPModule(ExynosResourceManager* resourceManager, uint32_t physicalType,
+                        uint32_t logicalType, const char* name, uint32_t physicalIndex,
+                        uint32_t logicalIndex, uint32_t preAssignInfo);
+        ~ExynosMPPModule();
+        virtual void initTDMInfo(uint32_t hwBlockIndex, uint32_t axiPortIndex);
+};
 
 }  // namespace zuma
 
