@@ -29,6 +29,49 @@ class ExynosPrimaryDisplayModule : public gs201::ExynosPrimaryDisplayModule {
                                    const std::string& displayName);
         ~ExynosPrimaryDisplayModule();
         virtual int32_t validateWinConfigData();
+
+    protected:
+        class OperationRateManager
+              : public gs201::ExynosPrimaryDisplayModule::OperationRateManager {
+        public:
+            OperationRateManager(ExynosPrimaryDisplay* display, int32_t hsHz, int32_t nsHz);
+            virtual ~OperationRateManager();
+
+            int32_t onLowPowerMode(bool enabled) override;
+            int32_t onPeakRefreshRate(uint32_t rate) override;
+            int32_t onConfig(hwc2_config_t cfg) override;
+            int32_t onBrightness(uint32_t dbv) override;
+            int32_t onPowerMode(int32_t mode) override;
+            int32_t getOperationRate() override;
+
+        private:
+            enum class DispOpCondition : uint32_t {
+                PANEL_SET_POWER = 0,
+                SET_CONFIG,
+                SET_DBV,
+                MAX,
+            };
+
+            int32_t updateOperationRateLocked(const DispOpCondition cond);
+            int32_t setOperationRate(const int32_t rate);
+            int32_t getRefreshRate(const int32_t config_id);
+
+            ExynosPrimaryDisplay* mDisplay;
+            int32_t mDisplayHsOperationRate;
+            int32_t mDisplayNsOperationRate;
+            int32_t mDisplayActiveOperationRate;
+            int32_t mDisplayNsMinDbv;
+            int32_t mDisplayPeakRefreshRate;
+            int32_t mDisplayRefreshRate;
+            int32_t mDisplayLastDbv;
+            int32_t mDisplayDbv;
+            std::optional<hwc2_power_mode_t> mDisplayPowerMode;
+            bool mDisplayLowBatteryModeEnabled;
+            Mutex mLock;
+            std::string mSysfsPath;
+
+            static constexpr uint32_t BRIGHTNESS_DELTA_THRESHOLD = 10;
+        };
 };
 
 }  // namespace zuma
