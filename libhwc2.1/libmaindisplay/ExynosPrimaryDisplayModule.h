@@ -25,7 +25,8 @@ using namespace displaycolor;
 
 class ExynosPrimaryDisplayModule : public gs201::ExynosPrimaryDisplayModule {
     public:
-        ExynosPrimaryDisplayModule(uint32_t index, ExynosDevice *device);
+        ExynosPrimaryDisplayModule(uint32_t index, ExynosDevice* device,
+                                   const std::string& displayName);
         ~ExynosPrimaryDisplayModule();
         virtual int32_t validateWinConfigData();
 };

@@ -18,11 +18,9 @@
 
 using namespace zuma;
 
-ExynosPrimaryDisplayModule::ExynosPrimaryDisplayModule(uint32_t index, ExynosDevice* device)
-        :    gs201::ExynosPrimaryDisplayModule(index, device)
-{
-
-}
+ExynosPrimaryDisplayModule::ExynosPrimaryDisplayModule(uint32_t index, ExynosDevice* device,
+                                                       const std::string& displayName)
+      : gs201::ExynosPrimaryDisplayModule(index, device, displayName) {}
 
 ExynosPrimaryDisplayModule::~ExynosPrimaryDisplayModule ()
 {
