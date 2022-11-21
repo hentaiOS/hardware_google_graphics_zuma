@@ -205,7 +205,20 @@ uint32_t ExynosResourceManagerModule::calculateHWResourceAmount(ExynosDisplay *d
 {
     uint32_t SRAMtotal = 0;
 
-    if (mppSrc == NULL) return SRAMtotal;
+    if (mppSrc == nullptr) return SRAMtotal;
+
+    if (mppSrc->mSourceType == MPP_SOURCE_LAYER) {
+        ExynosLayer *layer = static_cast<ExynosLayer *>(mppSrc->mSource);
+        if (layer == nullptr) {
+            ALOGE("%s: cannot cast ExynosLayer", __func__);
+            return SRAMtotal;
+        }
+        exynos_image src_img;
+        exynos_image dst_img;
+        layer->setSrcExynosImage(&src_img);
+        layer->setDstExynosImage(&dst_img);
+        layer->setExynosImage(src_img, dst_img);
+    }
 
     HDEBUGLOGD(eDebugTDM, "mppSrc(%p) SRAM calculation start", mppSrc->mSrcImg.bufferHandle);
 
