@@ -56,27 +56,27 @@ bool ExynosResourceManagerModule::isHWResourceAvailable(ExynosDisplay *display,
         getAmounts(display, otfMPP, currentBlockId, layer, mppSrc, accumulatedAmount);
     }
 
-    HDEBUGLOGD(eDebugTDM,
-               "%s : %p trying to assign to %s, compare with ExynosComposition Target buffer",
-               __func__, mppSrc->mSrcImg.bufferHandle, currentMPP->mName.string());
     if (display->mExynosCompositionInfo.mHasCompositionLayer) {
+        HDEBUGLOGD(eDebugTDM,
+                   "%s : %p trying to assign to %s, compare with ExynosComposition Target buffer",
+                   __func__, mppSrc->mSrcImg.bufferHandle, currentMPP->mName.string());
         ExynosMPP *otfMPP = display->mExynosCompositionInfo.mOtfMPP;
         if (otfMPP)
             getAmounts(display, otfMPP, currentBlockId, &display->mExynosCompositionInfo, mppSrc,
                        accumulatedAmount);
     }
 
-    HDEBUGLOGD(eDebugTDM,
-               "%s : %p trying to assign to %s, compare with ClientComposition Target buffer",
-               __func__, mppSrc->mSrcImg.bufferHandle, currentMPP->mName.string());
     if (display->mClientCompositionInfo.mHasCompositionLayer) {
+        HDEBUGLOGD(eDebugTDM,
+                   "%s : %p trying to assign to %s, compare with ClientComposition Target buffer",
+                   __func__, mppSrc->mSrcImg.bufferHandle, currentMPP->mName.string());
         ExynosMPP *otfMPP = display->mClientCompositionInfo.mOtfMPP;
         if (otfMPP)
             getAmounts(display, otfMPP, currentBlockId, &display->mClientCompositionInfo, mppSrc,
                        accumulatedAmount);
     }
 
-    displayTDMInfo::resourceAmount_t amount = {
+    DisplayTDMInfo::ResourceAmount_t amount = {
             0,
     };
 
@@ -138,7 +138,7 @@ uint32_t ExynosResourceManagerModule::setDisplaysTDMInfo()
                                     .totalAmount;
                 }
 
-                displayTDMInfo::resourceAmount_t amount = {
+                DisplayTDMInfo::ResourceAmount_t amount = {
                         0,
                 };
                 amount.totalAmount = total;
@@ -153,7 +153,7 @@ uint32_t ExynosResourceManagerModule::setDisplaysTDMInfo()
         for (auto &display : mDisplays) {
             for (auto attr = HWAttrs.begin(); attr != HWAttrs.end(); attr++) {
                 for (auto blockId = DPUBlocks.begin(); blockId != DPUBlocks.end(); blockId++) {
-                    displayTDMInfo::resourceAmount_t amount = {
+                    DisplayTDMInfo::ResourceAmount_t amount = {
                             0,
                     };
                     amount = display->mDisplayTDMInfo[blockId->first].getAvailableAmount(
@@ -181,7 +181,7 @@ uint32_t ExynosResourceManagerModule::initDisplaysTDMInfo()
                 if (mHWResourceTables->find(
                             HWResourceIndexes(attr->first, blockId->first, display->mType)) !=
                     mHWResourceTables->end()) {
-                    displayTDMInfo::resourceAmount_t amount = {
+                    DisplayTDMInfo::ResourceAmount_t amount = {
                             0,
                     };
                     amount.totalAmount = mHWResourceTables
@@ -222,7 +222,7 @@ uint32_t ExynosResourceManagerModule::calculateHWResourceAmount(ExynosDisplay *d
     else if (isFormat8Bit(format))
         formatBPP = BIT8;
 
-    /** To find inddex **/
+    /** To find index **/
     uint32_t formatIndex = 0;
 
     lbWidthIndex_t widthIndex;
@@ -492,9 +492,8 @@ int32_t ExynosResourceManagerModule::otfMppReordering(ExynosDisplay *display,
     return 0;
 }
 
-bool ExynosResourceManagerModule::isOverlaped(ExynosDisplay *display, ExynosMPPSource *current,
-                                              ExynosMPPSource *compare)
-{
+bool ExynosResourceManagerModule::isOverlapped(ExynosDisplay *display, ExynosMPPSource *current,
+                                               ExynosMPPSource *compare) {
     int CT = current->mDstImg.y - TDM_OVERLAP_MARGIN;
     CT = (CT < 0) ? 0 : CT;
     int CB = current->mDstImg.y + current->mDstImg.h + TDM_OVERLAP_MARGIN;
@@ -518,7 +517,7 @@ uint32_t ExynosResourceManagerModule::getAmounts(ExynosDisplay *display, ExynosM
                                                  std::map<tdm_attr_t, uint32_t> &amounts)
 {
     uint32_t blockId = otfMPP->getHWBlockId();
-    if ((currentBlockId == blockId) && (isOverlaped(display, compare, current))) {
+    if ((currentBlockId == blockId) && (isOverlapped(display, compare, current))) {
         for (auto attr = HWAttrs.begin(); attr != HWAttrs.end(); attr++) {
             uint32_t currentAmount = compare->getHWResourceAmount(attr->first);
             HDEBUGLOGD(eDebugTDM, "%s, attr %s %d(+ %d)", otfMPP->mName.string(),
