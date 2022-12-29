@@ -90,6 +90,7 @@ ExynosPrimaryDisplayModule::OperationRateManager::OperationRateManager(
         mDisplayNsOperationRate(nsHz),
         mDisplayPeakRefreshRate(0),
         mDisplayRefreshRate(0),
+        mDisplayLastDbv(0),
         mDisplayDbv(0),
         mDisplayPowerMode(HWC2_POWER_MODE_ON),
         mDisplayLowBatteryModeEnabled(false) {
