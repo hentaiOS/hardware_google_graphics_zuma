@@ -45,56 +45,13 @@ int32_t convertDqeMatrixDataToDrmMatrix(T &colorMatrix, M &mat, uint32_t dimensi
 
 int32_t ColorDrmBlobFactory::eotf(const GsInterfaceType::IDpp::EotfData::ConfigType *config,
                                   DrmDevice *drm, uint32_t &blobId) {
-    struct hdr_eotf_lut_v2p2 eotfLut;
-
-    if (config == nullptr) {
-        ALOGE("no dpp eotf config");
-        return -EINVAL;
-    }
-
-    if ((config->tf_data.posx.size() != 2 * DRM_SAMSUNG_HDR_EOTF_V2P2_LUT_LEN - 1) ||
-        (config->tf_data.posy.size() != 2 * DRM_SAMSUNG_HDR_EOTF_V2P2_LUT_LEN - 1)) {
-        ALOGE("%s: eotf pos size (%zu, %zu)", __func__, config->tf_data.posx.size(),
-              config->tf_data.posy.size());
-        return -EINVAL;
-    }
-    eotfLut.scaler = config->eotf_scalar;
-    eotfLut.lut_en = config->eotf_lut_en;
-    for (uint32_t i = 0; i < DRM_SAMSUNG_HDR_EOTF_V2P2_LUT_LEN; i++) {
-        eotfLut.ts[i].even = config->tf_data.posx[2 * i];
-        eotfLut.ts[i].odd = config->tf_data.posx[2 * i + 1];
-        eotfLut.vs[i].even = config->tf_data.posy[2 * i];
-        eotfLut.vs[i].odd = config->tf_data.posy[2 * i + 1];
-    }
-    eotfLut.vs[DRM_SAMSUNG_HDR_EOTF_V2P2_LUT_LEN - 1].odd = 0;
-    int ret = drm->CreatePropertyBlob(&eotfLut, sizeof(eotfLut), &blobId);
-    if (ret) {
-        ALOGE("Failed to create eotf lut blob %d", ret);
-        return ret;
-    }
+    // TODO b/238217456: libdisplaycolor:Add Zuma support: DPUF
     return NO_ERROR;
 }
 
 int32_t ColorDrmBlobFactory::gm(const GsInterfaceType::IDpp::GmData::ConfigType *config,
                                 DrmDevice *drm, uint32_t &blobId) {
-    int ret = 0;
-    struct hdr_gm_data gmMatrix;
-
-    if (config == nullptr) {
-        ALOGE("no dpp GM config");
-        return -EINVAL;
-    }
-
-    if ((ret = convertDqeMatrixDataToDrmMatrix(config->matrix_data, gmMatrix,
-                                            DRM_SAMSUNG_HDR_GM_DIMENS)) != NO_ERROR) {
-        ALOGE("Failed to convert gm matrix");
-        return ret;
-    }
-    ret = drm->CreatePropertyBlob(&gmMatrix, sizeof(gmMatrix), &blobId);
-    if (ret) {
-        ALOGE("Failed to create gm matrix blob %d", ret);
-        return ret;
-    }
+    // TODO b/238217456: libdisplaycolor:Add Zuma support: DPUF
     return NO_ERROR;
 }
 
@@ -106,31 +63,7 @@ int32_t ColorDrmBlobFactory::dtm(const GsInterfaceType::IDpp::DtmData::ConfigTyp
 
 int32_t ColorDrmBlobFactory::oetf(const GsInterfaceType::IDpp::OetfData::ConfigType *config,
                                   DrmDevice *drm, uint32_t &blobId) {
-    struct hdr_oetf_lut_v2p2 oetfLut;
-
-    if (config == nullptr) {
-        ALOGE("no dpp OETF config");
-        return -EINVAL;
-    }
-
-    if ((config->tf_data.posx.size() != 2 * DRM_SAMSUNG_HDR_OETF_V2P2_LUT_LEN) ||
-        (config->tf_data.posy.size() != 2 * DRM_SAMSUNG_HDR_OETF_V2P2_LUT_LEN)) {
-        ALOGE("%s: oetf pos size (%zu, %zu)", __func__, config->tf_data.posx.size(),
-              config->tf_data.posy.size());
-        return -EINVAL;
-    }
-
-    for (uint32_t i = 0; i < DRM_SAMSUNG_HDR_OETF_V2P2_LUT_LEN; i++) {
-        oetfLut.ts[i].even = config->tf_data.posx[2 * i];
-        oetfLut.ts[i].odd = config->tf_data.posx[2 * i + 1];
-        oetfLut.vs[i].even = config->tf_data.posy[2 * i];
-        oetfLut.vs[i].odd = config->tf_data.posy[2 * i + 1];
-    }
-    int ret = drm->CreatePropertyBlob(&oetfLut, sizeof(oetfLut), &blobId);
-    if (ret) {
-        ALOGE("Failed to create oetf lut blob %d", ret);
-        return ret;
-    }
+    // TODO b/238217456: libdisplaycolor:Add Zuma support: DPUF
     return NO_ERROR;
 }
 
