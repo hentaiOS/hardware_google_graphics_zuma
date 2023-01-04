@@ -17,12 +17,25 @@
 #ifndef EXYNOS_DEVICE_MODULE_ZUMA_H
 #define EXYNOS_DEVICE_MODULE_ZUMA_H
 
+#include <aidl/android/hardware/graphics/composer3/OverlayProperties.h>
+
 #include "../../../gs201/libhwc2.1/libdevice/ExynosDeviceModule.h"
 
 namespace zuma {
 
-using ExynosDeviceModule = gs201::ExynosDeviceModule;
+class ExynosDeviceModule : public gs201::ExynosDeviceModule {
+public:
+    ExynosDeviceModule();
+    virtual ~ExynosDeviceModule();
+    using OverlayProperties = aidl::android::hardware::graphics::composer3::OverlayProperties;
+    using SupportedBufferCombinations =
+            aidl::android::hardware::graphics::composer3::SupportedBufferCombinations;
+    virtual int32_t getOverlaySupport(OverlayProperties* caps);
 
-}  // namespace zuma
+private:
+    const SupportedBufferCombinations overlay_caps;
+};
+
+} // namespace zuma
 
 #endif // EXYNOS_DEVICE_MODULE_ZUMA_H
