@@ -28,8 +28,7 @@ public:
     ExynosDeviceModule();
     virtual ~ExynosDeviceModule();
     using OverlayProperties = aidl::android::hardware::graphics::composer3::OverlayProperties;
-    using SupportedBufferCombinations =
-            aidl::android::hardware::graphics::composer3::SupportedBufferCombinations;
+    using SupportedBufferCombinations = OverlayProperties::SupportedBufferCombinations;
     virtual int32_t getOverlaySupport(OverlayProperties* caps);
 
 private:
