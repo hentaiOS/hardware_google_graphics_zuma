@@ -53,6 +53,7 @@ int32_t ExynosDeviceModule::getOverlaySupport(OverlayProperties* caps) {
         return NO_ERROR;
     }
     caps->combinations.push_back(overlay_caps);
+    caps->supportMixedColorSpaces = supportMixedColorSpaces;
     return NO_ERROR;
 }
 } // namespace zuma

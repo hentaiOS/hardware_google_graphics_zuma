@@ -33,6 +33,7 @@ public:
 
 private:
     const SupportedBufferCombinations overlay_caps;
+    const bool supportMixedColorSpaces = true;
 };
 
 } // namespace zuma
