@@ -42,10 +42,12 @@ const ExynosDeviceModule::SupportedBufferCombinations overlay_caps =
                  DisplayPixelFormat::YCBCR_P010,
                  DisplayPixelFormat::R_8,
          },
+         {Dataspace::STANDARD_BT2020},
          {Dataspace::TRANSFER_UNSPECIFIED, Dataspace::TRANSFER_LINEAR, Dataspace::TRANSFER_SRGB,
           Dataspace::TRANSFER_SMPTE_170M, Dataspace::TRANSFER_GAMMA2_2,
           Dataspace::TRANSFER_GAMMA2_6, Dataspace::TRANSFER_GAMMA2_8, Dataspace::TRANSFER_ST2084,
-          Dataspace::TRANSFER_HLG}};
+          Dataspace::TRANSFER_HLG},
+         {Dataspace::RANGE_FULL}};
 
 int32_t ExynosDeviceModule::getOverlaySupport(OverlayProperties* caps) {
     if (caps == nullptr) {
