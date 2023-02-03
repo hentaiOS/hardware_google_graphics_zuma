@@ -41,6 +41,8 @@ class ExynosResourceManagerModule : public gs201::ExynosResourceManagerModule {
         uint32_t getAmounts(ExynosDisplay *display, ExynosMPP *otfMPP, uint32_t currentBlockId,
                             ExynosMPPSource *compare, ExynosMPPSource *current,
                             std::map<tdm_attr_t, uint32_t> &amounts);
+        bool checkTDMResource(ExynosDisplay *display, ExynosMPP *currentMPP,
+                              ExynosMPPSource *mppSrc);
 
     public:
         const std::map<HWResourceIndexes, HWResourceAmounts_t> *mHWResourceTables = nullptr;
