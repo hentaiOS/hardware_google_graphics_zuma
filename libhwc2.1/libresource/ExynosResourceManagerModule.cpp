@@ -35,6 +35,8 @@ ExynosResourceManagerModule::ExynosResourceManagerModule(ExynosDevice *device)
 {
     // HW Resource Table for TDM based allocation
     mHWResourceTables = &HWResourceTables;
+    // TODO (b/266048745): Revert once G2D HDR code for zuma is merged
+    mM2mMPPs.clear();
 }
 
 ExynosResourceManagerModule::~ExynosResourceManagerModule() {}
