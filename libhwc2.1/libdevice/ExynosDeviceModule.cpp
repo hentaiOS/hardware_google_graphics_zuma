@@ -28,33 +28,38 @@ ExynosDeviceModule::ExynosDeviceModule() {}
 
 ExynosDeviceModule::~ExynosDeviceModule() {}
 
-const ExynosDeviceModule::SupportedBufferCombinations overlay_caps =
+const ExynosDeviceModule::SupportedBufferCombinations overlay_caps_rgb =
         {{
-                 DisplayPixelFormat::RGBA_8888,
-                 DisplayPixelFormat::RGBX_8888,
-                 DisplayPixelFormat::RGB_888,
-                 DisplayPixelFormat::RGB_565,
-                 DisplayPixelFormat::BGRA_8888,
-                 DisplayPixelFormat::YCRCB_420_SP,
-                 DisplayPixelFormat::RGBA_FP16,
-                 DisplayPixelFormat::RGBA_1010102,
-                 DisplayPixelFormat::YV12,
-                 DisplayPixelFormat::YCBCR_P010,
-                 DisplayPixelFormat::R_8,
-         },
-         {Dataspace::STANDARD_BT2020},
+
+                 DisplayPixelFormat::RGBA_8888, DisplayPixelFormat::RGBX_8888,
+                 DisplayPixelFormat::RGB_888, DisplayPixelFormat::RGB_565,
+                 DisplayPixelFormat::BGRA_8888, DisplayPixelFormat::RGBA_FP16,
+                 DisplayPixelFormat::RGBA_1010102, DisplayPixelFormat::R_8},
+         {Dataspace::STANDARD_BT2020, Dataspace::STANDARD_BT709, Dataspace::STANDARD_DCI_P3},
          {Dataspace::TRANSFER_UNSPECIFIED, Dataspace::TRANSFER_LINEAR, Dataspace::TRANSFER_SRGB,
           Dataspace::TRANSFER_SMPTE_170M, Dataspace::TRANSFER_GAMMA2_2,
           Dataspace::TRANSFER_GAMMA2_6, Dataspace::TRANSFER_GAMMA2_8, Dataspace::TRANSFER_ST2084,
           Dataspace::TRANSFER_HLG},
          {Dataspace::RANGE_FULL}};
 
+const ExynosDeviceModule::SupportedBufferCombinations overlay_caps_yuv =
+        {{DisplayPixelFormat::YCRCB_420_SP, DisplayPixelFormat::YV12,
+          DisplayPixelFormat::YCBCR_P010},
+         {Dataspace::STANDARD_BT2020, Dataspace::STANDARD_BT709, Dataspace::STANDARD_DCI_P3},
+         {Dataspace::TRANSFER_UNSPECIFIED, Dataspace::TRANSFER_LINEAR, Dataspace::TRANSFER_SRGB,
+          Dataspace::TRANSFER_SMPTE_170M, Dataspace::TRANSFER_GAMMA2_2,
+          Dataspace::TRANSFER_GAMMA2_6, Dataspace::TRANSFER_GAMMA2_8, Dataspace::TRANSFER_ST2084,
+          Dataspace::TRANSFER_HLG},
+         {Dataspace::RANGE_FULL, Dataspace::RANGE_LIMITED}};
+
 int32_t ExynosDeviceModule::getOverlaySupport(OverlayProperties* caps) {
     if (caps == nullptr) {
         ALOGE("%s:: no caps pointer", __func__);
         return NO_ERROR;
     }
-    caps->combinations.push_back(overlay_caps);
+    caps->combinations.push_back(overlay_caps_rgb);
+    caps->combinations.push_back(overlay_caps_yuv);
+
     caps->supportMixedColorSpaces = supportMixedColorSpaces;
     return NO_ERROR;
 }
