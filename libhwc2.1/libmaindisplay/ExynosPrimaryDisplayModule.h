@@ -71,6 +71,7 @@ class ExynosPrimaryDisplayModule : public gs201::ExynosPrimaryDisplayModule {
             std::string mSysfsPath;
 
             static constexpr uint32_t BRIGHTNESS_DELTA_THRESHOLD = 10;
+            static constexpr uint32_t LP_OP_RATE = 30;
         };
 };
 

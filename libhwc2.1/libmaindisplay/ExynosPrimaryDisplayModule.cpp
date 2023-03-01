@@ -56,7 +56,10 @@ int32_t ExynosPrimaryDisplayModule::validateWinConfigData()
 int32_t ExynosPrimaryDisplayModule::OperationRateManager::getOperationRate() {
     std::string op_rate_str;
 
-    if (readLineFromFile(mSysfsPath, op_rate_str, '\n') != OK) {
+    if (mDisplayPowerMode == HWC2_POWER_MODE_DOZE ||
+        mDisplayPowerMode == HWC2_POWER_MODE_DOZE_SUSPEND) {
+        return LP_OP_RATE;
+    } else if (readLineFromFile(mSysfsPath, op_rate_str, '\n') != OK) {
         OP_MANAGER_LOGE("failed to read %s", mSysfsPath.c_str());
         return 0;
     }
@@ -132,9 +135,19 @@ int32_t ExynosPrimaryDisplayModule::OperationRateManager::onBrightness(uint32_t 
     mDisplayDbv = dbv;
     return updateOperationRateLocked(DispOpCondition::SET_DBV);
 }
+
 int32_t ExynosPrimaryDisplayModule::OperationRateManager::onPowerMode(int32_t mode) {
+    std::string modeName = "Unknown";
+    if (mode == HWC2_POWER_MODE_ON) {
+        modeName = "On";
+    } else if (mode == HWC2_POWER_MODE_OFF) {
+        modeName = "Off";
+    } else if (mode == HWC2_POWER_MODE_DOZE || mode == HWC2_POWER_MODE_DOZE_SUSPEND) {
+        modeName = "LP";
+    }
+
     Mutex::Autolock lock(mLock);
-    OP_MANAGER_LOGD("mode=%d", mode);
+    OP_MANAGER_LOGD("mode=%s", modeName.c_str());
     mDisplayPowerMode = static_cast<hwc2_power_mode_t>(mode);
     return updateOperationRateLocked(DispOpCondition::PANEL_SET_POWER);
 }
@@ -142,9 +155,6 @@ int32_t ExynosPrimaryDisplayModule::OperationRateManager::onPowerMode(int32_t mo
 int32_t ExynosPrimaryDisplayModule::OperationRateManager::updateOperationRateLocked(
         const DispOpCondition cond) {
     int32_t ret = HWC2_ERROR_NONE, dbv;
-
-    // skip op rate update under AOD and power off
-    if (mDisplayPowerMode != HWC2_POWER_MODE_ON) return ret;
 
     ATRACE_CALL();
     if (cond == DispOpCondition::SET_DBV) {
@@ -160,7 +170,7 @@ int32_t ExynosPrimaryDisplayModule::OperationRateManager::updateOperationRateLoc
             mDisplayLowBatteryModeEnabled;
     int32_t effectiveOpRate = 0;
 
-    // check minimal opertion rate needed
+    // check minimal operation rate needed
     if (isSteadyLowRefreshRate && curRefreshRate <= mDisplayNsOperationRate) {
         desiredOpRate = mDisplayNsOperationRate;
     }
@@ -168,7 +178,17 @@ int32_t ExynosPrimaryDisplayModule::OperationRateManager::updateOperationRateLoc
     if (mDisplayLastDbv < mDisplayNsMinDbv || dbv < mDisplayNsMinDbv) {
         desiredOpRate = mDisplayHsOperationRate;
     }
-    mDisplayActiveOperationRate = getOperationRate();
+
+    if (mDisplayPowerMode == HWC2_POWER_MODE_ON) {
+        mDisplayActiveOperationRate = getOperationRate();
+    } else if (mDisplayPowerMode == HWC2_POWER_MODE_DOZE ||
+               mDisplayPowerMode == HWC2_POWER_MODE_DOZE_SUSPEND) {
+        mDisplayActiveOperationRate = LP_OP_RATE;
+        desiredOpRate = mDisplayActiveOperationRate;
+        effectiveOpRate = desiredOpRate;
+    } else {
+        return ret;
+    }
 
     if (cond == DispOpCondition::SET_CONFIG) {
         curRefreshRate = mDisplayRefreshRate;
@@ -182,13 +202,19 @@ int32_t ExynosPrimaryDisplayModule::OperationRateManager::updateOperationRateLoc
         int32_t delta = abs(dbv - mDisplayLastDbv);
         if (delta > BRIGHTNESS_DELTA_THRESHOLD) effectiveOpRate = desiredOpRate;
         mDisplayLastDbv = dbv;
-        if (effectiveOpRate && (effectiveOpRate != mDisplayActiveOperationRate)) {
+        if (effectiveOpRate > LP_OP_RATE && (effectiveOpRate != mDisplayActiveOperationRate)) {
             OP_MANAGER_LOGD("brightness delta=%d", delta);
         } else {
             return ret;
         }
     }
-    if (effectiveOpRate) ret = setOperationRate(effectiveOpRate);
+
+    if (!mDisplay->isConfigSettingEnabled()) {
+        OP_MANAGER_LOGI("rate switching is disabled, skip op rate update");
+        return ret;
+    } else if (effectiveOpRate > LP_OP_RATE) {
+        ret = setOperationRate(effectiveOpRate);
+    }
 
     OP_MANAGER_LOGI("Op@%d(desired:%d) | Refresh@%d(peak:%d), Battery:%s, DBV:%d(NsMin:%d)",
                     mDisplayActiveOperationRate, desiredOpRate, curRefreshRate,
