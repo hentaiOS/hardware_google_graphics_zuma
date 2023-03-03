@@ -65,15 +65,15 @@ static const dpp_channel_map_t idma_channel_map[] = {
     {MPP_DPP_GFS,     6, IDMA(11),  IDMA(11)},
     {MPP_DPP_VGRFS,   5, IDMA(12),  IDMA(12)},
     {MPP_DPP_GFS,     7, IDMA(13),  IDMA(13)},
-    {MPP_P_TYPE_MAX,  0, IDMA(14),  IDMA(14)}, // not idma but..
+    {MPP_P_TYPE_MAX,  0, ODMA_WB,   IDMA(14)}, // not idma but..
     {static_cast<mpp_phycal_type_t>(MAX_DECON_DMA_TYPE), 0, MAX_DECON_DMA_TYPE,
-        IDMA(ODMA_WB + 1)}
+        IDMA(15)}
 };
 
 static const exynos_mpp_t available_otf_mpp_units[] = {
-    // Zuma has 8ea Graphics-Only Layers
-    // Zuma has 6ea Video-Graphics Layers
-    // Zuma has total 14ea Layers
+    // Zuma has 8 Graphics-Only Layers
+    // Zuma has 6 Video-Graphics Layers
+    // Zuma has total 14 Layers
 
     // DPP0(IDMA_GFS0) in DPUF0 is connected with AXI0 port
     {MPP_DPP_GFS, MPP_LOGICAL_DPP_GFS, "DPP_GFS0", 0, 0, HWC_DISPLAY_PRIMARY_BIT,
