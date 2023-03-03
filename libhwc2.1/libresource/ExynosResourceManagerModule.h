@@ -36,11 +36,13 @@ class ExynosResourceManagerModule : public gs201::ExynosResourceManagerModule {
         virtual int32_t otfMppReordering(ExynosDisplay *display, ExynosMPPVector &otfMPPs,
                                          struct exynos_image &src, struct exynos_image &dst);
 
-        bool isOverlaped(ExynosDisplay *display, ExynosMPPSource *current,
-                         ExynosMPPSource *compare);
+        bool isOverlapped(ExynosDisplay *display, ExynosMPPSource *current,
+                          ExynosMPPSource *compare);
         uint32_t getAmounts(ExynosDisplay *display, ExynosMPP *otfMPP, uint32_t currentBlockId,
                             ExynosMPPSource *compare, ExynosMPPSource *current,
                             std::map<tdm_attr_t, uint32_t> &amounts);
+        bool checkTDMResource(ExynosDisplay *display, ExynosMPP *currentMPP,
+                              ExynosMPPSource *mppSrc);
 
     public:
         const std::map<HWResourceIndexes, HWResourceAmounts_t> *mHWResourceTables = nullptr;
