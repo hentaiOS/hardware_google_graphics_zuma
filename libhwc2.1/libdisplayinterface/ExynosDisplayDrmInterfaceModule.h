@@ -23,7 +23,11 @@
 
 namespace zuma {
 
-using ExynosPrimaryDisplayDrmInterfaceModule = gs201::ExynosPrimaryDisplayDrmInterfaceModule;
+    class ExynosPrimaryDisplayDrmInterfaceModule : public gs201::ExynosPrimaryDisplayDrmInterfaceModule {
+public:
+        ExynosPrimaryDisplayDrmInterfaceModule(ExynosDisplay *exynosDisplay);
+    };
+
 using ExynosExternalDisplayDrmInterfaceModule = gs201::ExynosExternalDisplayDrmInterfaceModule;
 
 } // namespace zuma
