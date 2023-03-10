@@ -26,6 +26,7 @@ LOCAL_SRC_FILES += \
 	../../gs101/libhwc2.1/libvirtualdisplay/ExynosVirtualDisplayModule.cpp \
 	../../gs101/libhwc2.1/libdisplayinterface/ExynosDisplayDrmInterfaceModule.cpp \
 	../../gs201/libhwc2.1/libdisplayinterface/ExynosDisplayDrmInterfaceModule.cpp \
+	../../zuma/libhwc2.1/libdisplayinterface/ExynosDisplayDrmInterfaceModule.cpp \
 	../../zuma/libhwc2.1/libcolormanager/DisplayColorModule.cpp \
 	../../zuma/libhwc2.1/libdevice/ExynosDeviceModule.cpp
 
