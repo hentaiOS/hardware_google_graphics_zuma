@@ -222,3 +222,20 @@ int32_t ExynosPrimaryDisplayModule::OperationRateManager::updateOperationRateLoc
                     mDisplayLastDbv, mDisplayNsMinDbv);
     return ret;
 }
+
+void ExynosPrimaryDisplayModule::checkPreblendingRequirement() {
+    String8 log;
+    int count = 0;
+    for (size_t i = 0; i < mLayers.size(); ++i) {
+        auto& dpp = getDppForLayer(mLayers[i]);
+        mLayers[i]->mNeedPreblending =
+                dpp.EotfLut().enable | dpp.Gm().enable | dpp.Dtm().enable | dpp.OetfLut().enable;
+        count += mLayers[i]->mNeedPreblending;
+        if (hwcCheckDebugMessages(eDebugTDM)) {
+            log.appendFormat(" i=%zu,pb(%d-%d,%d,%d,%d)", i, mLayers[i]->mNeedPreblending,
+                             dpp.EotfLut().enable, dpp.Gm().enable, dpp.Dtm().enable,
+                             dpp.OetfLut().enable);
+        }
+    }
+    DISPLAY_LOGD(eDebugTDM, "%s: disp(%d),cnt=%d%s", __func__, mDisplayId, count, log.string());
+}

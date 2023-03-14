@@ -29,6 +29,7 @@ class ExynosPrimaryDisplayModule : public gs201::ExynosPrimaryDisplayModule {
                                    const std::string& displayName);
         ~ExynosPrimaryDisplayModule();
         virtual int32_t validateWinConfigData();
+        void checkPreblendingRequirement() override;
 
     protected:
         class OperationRateManager
