@@ -16,7 +16,10 @@
 
 #include "ExynosResourceManagerModule.h"
 
+#include <cutils/properties.h>
+
 #include <list>
+#include <utility>
 
 #include "ExynosLayer.h"
 
@@ -37,6 +40,12 @@ ExynosResourceManagerModule::ExynosResourceManagerModule(ExynosDevice *device)
 {
     // HW Resource Table for TDM based allocation
     mHWResourceTables = &HWResourceTables;
+
+    char value[PROPERTY_VALUE_MAX];
+    property_get("ro.boot.hw.soc.rev", value, "2");
+    const int socRev = atoi(value);
+    mConstraintRev = socRev < 2 ? CONSTRAINT_A0 : CONSTRAINT_B0;
+    ALOGD("%s(): ro.boot.hw.soc.rev=%s ConstraintRev=%d", __func__, value, mConstraintRev);
     // TODO (b/266048745): Revert once G2D HDR code for zuma is merged
     mM2mMPPs.clear();
 }
@@ -154,13 +163,14 @@ uint32_t ExynosResourceManagerModule::setDisplaysTDMInfo()
     ExynosDisplay *primaryDisplay = getDisplay(getDisplayId(HWC_DISPLAY_PRIMARY, 0));
     for (auto attr = HWAttrs.begin(); attr != HWAttrs.end(); attr++) {
         for (auto blockId = DPUBlocks.begin(); blockId != DPUBlocks.end(); blockId++) {
-            if (mHWResourceTables->find(
-                        HWResourceIndexes(attr->first, blockId->first, primaryDisplay->mType)) !=
+            if (mHWResourceTables->find(HWResourceIndexes(attr->first, blockId->first,
+                                                          primaryDisplay->mType, mConstraintRev)) !=
                 mHWResourceTables->end()) {
-                uint32_t total = mHWResourceTables
-                                         ->at(HWResourceIndexes(attr->first, blockId->first,
-                                                                primaryDisplay->mType))
-                                         .totalAmount;
+                uint32_t total =
+                        mHWResourceTables
+                                ->at(HWResourceIndexes(attr->first, blockId->first,
+                                                       primaryDisplay->mType, mConstraintRev))
+                                .totalAmount;
 
                 if (addedDisplay != nullptr) {
                     total = total -
@@ -176,6 +186,9 @@ uint32_t ExynosResourceManagerModule::setDisplaysTDMInfo()
                 primaryDisplay->mDisplayTDMInfo[blockId->first].initTDMInfo(amount, attr->first);
                 HDEBUGLOGD(eDebugTDM, "Primary display (block : %d) : %s amount is updated to %d",
                            blockId->first, attr->second.string(), amount.totalAmount);
+            } else {
+                ALOGW("Primary display (block : %d) : cannot find resource for %s", blockId->first,
+                      attr->second.string());
             }
         }
     }
@@ -209,20 +222,24 @@ uint32_t ExynosResourceManagerModule::initDisplaysTDMInfo()
     for (auto &display : mDisplays) {
         for (auto attr = HWAttrs.begin(); attr != HWAttrs.end(); attr++) {
             for (auto blockId = DPUBlocks.begin(); blockId != DPUBlocks.end(); blockId++) {
-                if (mHWResourceTables->find(
-                            HWResourceIndexes(attr->first, blockId->first, display->mType)) !=
+                if (mHWResourceTables->find(HWResourceIndexes(attr->first, blockId->first,
+                                                              display->mType, mConstraintRev)) !=
                     mHWResourceTables->end()) {
                     DisplayTDMInfo::ResourceAmount_t amount = {
                             0,
                     };
-                    amount.totalAmount = mHWResourceTables
-                                                 ->at(HWResourceIndexes(attr->first, blockId->first,
-                                                                        display->mType))
-                                                 .maxAssignedAmount;
+                    amount.totalAmount =
+                            mHWResourceTables
+                                    ->at(HWResourceIndexes(attr->first, blockId->first,
+                                                           display->mType, mConstraintRev))
+                                    .maxAssignedAmount;
                     display->mDisplayTDMInfo[blockId->first].initTDMInfo(amount, attr->first);
                     HDEBUGLOGD(eDebugTDM, "%s, [attr:%d] display : %d, block : %d, amount : %d",
                                __func__, attr->first, display->mType, blockId->first,
                                amount.totalAmount);
+                } else {
+                    ALOGW("%s, [attr:%d] display : %d, block : %d no resource", __func__,
+                          attr->first, display->mType, blockId->first);
                 }
             }
         }
