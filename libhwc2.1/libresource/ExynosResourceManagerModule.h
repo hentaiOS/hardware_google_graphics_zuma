@@ -26,7 +26,6 @@ class ExynosResourceManagerModule : public gs201::ExynosResourceManagerModule {
         ExynosResourceManagerModule(ExynosDevice *device);
         ~ExynosResourceManagerModule();
 
-    public:
         /* TDM (Time-Division Multiplexing) based Resource Management */
         virtual bool isHWResourceAvailable(ExynosDisplay *display, ExynosMPP *currentMPP,
                                            ExynosMPPSource *mppSrc);
@@ -43,9 +42,10 @@ class ExynosResourceManagerModule : public gs201::ExynosResourceManagerModule {
                             std::map<tdm_attr_t, uint32_t> &amounts);
         bool checkTDMResource(ExynosDisplay *display, ExynosMPP *currentMPP,
                               ExynosMPPSource *mppSrc);
-
-    public:
         const std::map<HWResourceIndexes, HWResourceAmounts_t> *mHWResourceTables = nullptr;
+
+    private:
+        ConstraintRev_t mConstraintRev;
 };
 
 }  // namespace zuma
