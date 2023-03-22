@@ -269,6 +269,10 @@ public:
     virtual void putCommands(struct g2d_commandlist __unused *commands) override {
         assert(commands == &mCommandList);
     }
+
+    virtual bool hasColorFillLayer(void)  override {
+        return true;
+    };
 };
 
 IG2DHdr10CommandWriter *IG2DHdr10CommandWriter::createInstance() {
