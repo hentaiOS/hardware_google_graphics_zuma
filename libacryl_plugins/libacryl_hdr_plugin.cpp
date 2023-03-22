@@ -19,76 +19,96 @@
 #include <array>
 
 #include <gs101/displaycolor/displaycolor_gs101.h>
+#include <zuma/displaycolor/displaycolor_zuma.h>
 #include <hardware/exynos/g2d_hdr_plugin.h>
 
-#define HDR_BASE 0x3000
+#define HDR_HDR_CON 0x3000
 #define HDR_SFR_LEN 0x800
 
-#define HDR_COM_CTRL 0x3004 // [0] HDR enable
-static const uint32_t VAL_HDR_CTRL_ENABLE = 1;
+#define HDR_HDR_CON_NUM 1
+#define HDR_EOTF_SCALER_NUM 1
+#define HDR_EOTF_LUT_TS_NUM 20 // two 10-bit
+#define HDR_EOTF_LUT_VS_NUM 20 //two 16-bit
+#define HDR_GM_COEF_NUM   9   // one 16-bit
+#define HDR_GM_OFF_NUM    3   // one 14-bit
+#define HDR_TM_COEF_NUM  3 // one 12-bit
+#define HDR_TM_YMIX_TF_NUM  1  // one 13-bit
+#define HDR_TM_YMIX_VF_NUM  1  // one 12-bit
+#define HDR_TM_YMIX_SLOPE_NUM 1  // one 14-bit
+#define HDR_TM_YMIX_DV_NUM  1   // one 13 bit
+#define HDR_TM_LUT_TS_NUM   24 //two 13-bit
+#define HDR_TM_LUT_VS_NUM   24 //two 13-bit
+#define HDR_OETF_LUT_TS_NUM 24 //two 14-bit
+#define HDR_OETF_LUT_VS_NUM 24 //two 10-bit
 
-#define HDR_MOD_CTRL_NUM  1   // [0] oetf enable, [1] eotf enable [2] gm enable [5] tm enable
-#define HDR_OETF_POSX_NUM 17  // two 16-bit from LSB
-#define HDR_OETF_POSY_NUM 17  // two 10-bit from LSB
-#define HDR_EOTF_POSX_NUM 65  // two 10-bit from LSB
-#define HDR_EOTF_POSY_NUM 129 // one 16-bit
-#define HDR_GM_COEF_NUM   9   // one 19-bit
-#define HDR_GM_OFF_NUM    3   // one 17-bit
-#define HDR_TM_COEF_NUM   1   // three 10-bit from LSB (R, G, B)
-#define HDR_TM_RNGX_NUM   1   // two 16-bit from LSB (min:max)
-#define HDR_TM_RNGY_NUM   1   // two 9-bit from LSB (min:max)
-#define HDR_TM_POSX_NUM   17  // two 16-bit from LSB
-#define HDR_TM_POSY_NUM   33  // one 27-bit from LSB
+#define HDR_MOD_CTRL_OFFSET  (0x4)
 
-#define HDR_MOD_CTRL_OFFSET  (0x8)
-static const uint32_t HDR_ENABLE_OETF = 1 << 0;
-static const uint32_t HDR_ENABLE_EOTF = 1 << 1;
-static const uint32_t HDR_ENABLE_GM   = 1 << 2;
-static const uint32_t HDR_ENABLE_DTM  = 1 << 5;
+// These settings are in HDR_HDR_CON
+static const uint32_t HDR_ENABLE_HDR = 1 << 0;
+static const uint32_t HDR_ENABLE_EOTF = 1 << 16;
+static const uint32_t HDR_ENABLE_EOTF_LUT_SFRRAMP = 0 << 17;
+static const uint32_t HDR_ENABLE_EOTF_LUT_PQTABLE = 1 << 17;
+static const uint32_t HDR_ENABLE_GM   = 1 << 20;
+static const uint32_t HDR_ENABLE_TM  = 1 << 24;
+static const uint32_t HDR_ENABLE_OETF  = 1 << 28 ;
 
-#define HDR_OETF_POSX_OFFSET (HDR_MOD_CTRL_OFFSET  + 4 * HDR_MOD_CTRL_NUM )
-#define HDR_OETF_POSY_OFFSET (HDR_OETF_POSX_OFFSET + 4 * HDR_OETF_POSX_NUM)
-#define HDR_EOTF_POSX_OFFSET (HDR_OETF_POSY_OFFSET + 4 * HDR_OETF_POSY_NUM)
-#define HDR_EOTF_POSY_OFFSET (HDR_EOTF_POSX_OFFSET + 4 * HDR_EOTF_POSX_NUM)
-#define HDR_GM_COEF_OFFSET   (HDR_EOTF_POSY_OFFSET + 4 * HDR_EOTF_POSY_NUM)
-#define HDR_GM_OFF_OFFSET    (HDR_GM_COEF_OFFSET   + 4 * HDR_GM_COEF_NUM  )
-#define HDR_TM_COEF_OFFSET   (HDR_GM_OFF_OFFSET    + 4 * HDR_GM_OFF_NUM   )
-#define HDR_TM_RNGX_OFFSET   (HDR_TM_COEF_OFFSET   + 4 * HDR_TM_COEF_NUM  )
-#define HDR_TM_RNGY_OFFSET   (HDR_TM_RNGX_OFFSET   + 4 * HDR_TM_RNGX_NUM  )
-#define HDR_TM_POSX_OFFSET   (HDR_TM_RNGY_OFFSET   + 4 * HDR_TM_RNGY_NUM  )
-#define HDR_TM_POSY_OFFSET   (HDR_TM_POSX_OFFSET   + 4 * HDR_TM_POSX_NUM  )
+// Even and odd settings for HDR coefficients.
 
-#define HDR_LAYER_BASE(layer) (HDR_BASE + HDR_SFR_LEN * (layer))
+//Defining offsets for coefficients
+#define HDR_EOTF_SCALER_OFFSET   (HDR_MOD_CTRL_OFFSET)
+// Undefined register space of 8 bytes after eotf scaler in zuma. Adding that to the next offset
+#define HDR_EOTF_LUT_TS_OFFSET   (HDR_EOTF_SCALER_OFFSET + 8 + 4 * HDR_EOTF_SCALER_NUM)
+#define HDR_EOTF_LUT_VS_OFFSET   (HDR_EOTF_LUT_TS_OFFSET + 4 * HDR_EOTF_LUT_TS_NUM)
+#define HDR_GM_COEF_OFFSET       (HDR_EOTF_LUT_VS_OFFSET + 4 * HDR_EOTF_LUT_VS_NUM)
+#define HDR_GM_OFF_OFFSET        (HDR_GM_COEF_OFFSET + 4 * HDR_GM_COEF_NUM)
+#define HDR_TM_COEF_OFFSET       (HDR_GM_OFF_OFFSET + 4 * HDR_GM_OFF_NUM)
+#define HDR_TM_YMIX_TF_OFFSET    (HDR_TM_COEF_OFFSET + 4 * HDR_TM_COEF_NUM)
+#define HDR_TM_YMIX_VF_OFFSET    (HDR_TM_YMIX_TF_OFFSET + 4 * HDR_TM_YMIX_TF_NUM)
+#define HDR_TM_YMIX_SLOPE_OFFSET (HDR_TM_YMIX_VF_OFFSET + 4 * HDR_TM_YMIX_VF_NUM)
+#define HDR_TM_YMIX_DV_OFFSET    (HDR_TM_YMIX_SLOPE_OFFSET + 4 * HDR_TM_YMIX_SLOPE_NUM)
+#define HDR_TM_LUT_TS_OFFSET     (HDR_TM_YMIX_DV_OFFSET + 4 * HDR_TM_YMIX_DV_NUM)
+#define HDR_TM_LUT_VS_OFFSET     (HDR_TM_LUT_TS_OFFSET + 4 * HDR_TM_LUT_TS_NUM)
+#define HDR_OETF_LUT_TS_OFFSET   (HDR_TM_LUT_VS_OFFSET + 4 * HDR_TM_LUT_VS_NUM)
+#define HDR_OETF_LUT_VS_OFFSET   (HDR_OETF_LUT_TS_OFFSET + 4 * HDR_OETF_LUT_TS_NUM)
 
-#define HDR_MOD_CTRL(layer)  (HDR_LAYER_BASE(layer) + HDR_MOD_CTRL_OFFSET )
-#define HDR_OETF_POSX(layer) (HDR_LAYER_BASE(layer) + HDR_OETF_POSX_OFFSET)
-#define HDR_OETF_POSY(layer) (HDR_LAYER_BASE(layer) + HDR_OETF_POSY_OFFSET)
-#define HDR_EOTF_POSX(layer) (HDR_LAYER_BASE(layer) + HDR_EOTF_POSX_OFFSET)
-#define HDR_EOTF_POSY(layer) (HDR_LAYER_BASE(layer) + HDR_EOTF_POSY_OFFSET)
-#define HDR_GM_COEF(layer)   (HDR_LAYER_BASE(layer) + HDR_GM_COEF_OFFSET  )
-#define HDR_GM_OFF(layer)    (HDR_LAYER_BASE(layer) + HDR_GM_OFF_OFFSET   )
-#define HDR_TM_COEF(layer)   (HDR_LAYER_BASE(layer) + HDR_TM_COEF_OFFSET  )
-#define HDR_TM_RNGX(layer)   (HDR_LAYER_BASE(layer) + HDR_TM_RNGX_OFFSET  )
-#define HDR_TM_RNGY(layer)   (HDR_LAYER_BASE(layer) + HDR_TM_RNGY_OFFSET  )
-#define HDR_TM_POSX(layer)   (HDR_LAYER_BASE(layer) + HDR_TM_POSX_OFFSET  )
-#define HDR_TM_POSY(layer)   (HDR_LAYER_BASE(layer) + HDR_TM_POSY_OFFSET  )
+#define HDR_LAYER_BASE(layer) (HDR_HDR_CON + HDR_SFR_LEN * (layer))
 
-#define G2D_LAYER_HDRMODE(i) (0x290 + (i) * 0x100)
+#define HDR_HDR_MOD_CON(layer)   (HDR_LAYER_BASE(layer))
+#define HDR_EOTF_SCALER(layer)   (HDR_LAYER_BASE(layer) + HDR_EOTF_SCALER_OFFSET)
+#define HDR_EOTF_LUT_TS(layer)   (HDR_LAYER_BASE(layer) + HDR_EOTF_LUT_TS_OFFSET)
+#define HDR_EOTF_LUT_VS(layer)   (HDR_LAYER_BASE(layer) + HDR_EOTF_LUT_VS_OFFSET)
+#define HDR_GM_COEF(layer)       (HDR_LAYER_BASE(layer) + HDR_GM_COEF_OFFSET)
+#define HDR_GM_OFF(layer)        (HDR_LAYER_BASE(layer) + HDR_GM_OFF_OFFSET)
+#define HDR_TM_COEF(layer)       (HDR_LAYER_BASE(layer) + HDR_TM_COEF_OFFSET)
+#define HDR_TM_YMIX_TF(layer)    (HDR_LAYER_BASE(layer) + HDR_TM_YMIX_TF_OFFSET)
+#define HDR_TM_YMIX_VF(layer)    (HDR_LAYER_BASE(layer) + HDR_TM_YMIX_VF_OFFSET)
+#define HDR_TM_YMIX_SLOPE(layer) (HDR_LAYER_BASE(layer) + HDR_TM_YMIX_SLOPE_OFFSET)
+#define HDR_TM_YMIX_DV(layer)    (HDR_LAYER_BASE(layer) + HDR_TM_YMIX_DV_OFFSET)
+#define HDR_TM_LUT_TS(layer)     (HDR_LAYER_BASE(layer) + HDR_TM_LUT_TS_OFFSET)
+#define HDR_TM_LUT_VS(layer)     (HDR_LAYER_BASE(layer) + HDR_TM_LUT_VS_OFFSET)
+#define HDR_OETF_LUT_TS(layer)   (HDR_LAYER_BASE(layer) + HDR_OETF_LUT_TS_OFFSET)
+#define HDR_OETF_LUT_VS(layer)   (HDR_LAYER_BASE(layer) + HDR_OETF_LUT_VS_OFFSET)
+
+
+#define G2D_LAYER_HDRMODE(i) (0x390 + (i) * 0x100)
 
 #define MAX_LAYER_COUNT 4
+
 #define HDR_LAYER_SFR_COUNT (\
-      HDR_MOD_CTRL_NUM + HDR_OETF_POSX_NUM + HDR_OETF_POSY_NUM + \
-      HDR_EOTF_POSX_NUM + HDR_EOTF_POSY_NUM + HDR_GM_COEF_NUM + \
-      HDR_GM_OFF_NUM + HDR_TM_COEF_NUM + HDR_TM_RNGX_NUM + \
-      HDR_TM_RNGY_NUM + HDR_TM_POSX_NUM + HDR_TM_POSY_NUM\
-      )
+        HDR_HDR_CON_NUM + HDR_EOTF_SCALER_NUM + \
+        HDR_EOTF_LUT_TS_NUM + HDR_EOTF_LUT_VS_NUM + HDR_GM_COEF_NUM + \
+        HDR_GM_OFF_NUM + HDR_TM_COEF_NUM + HDR_TM_YMIX_TF_NUM + \
+        HDR_TM_YMIX_TF_NUM + HDR_TM_YMIX_VF_NUM + HDR_TM_YMIX_SLOPE_NUM + \
+        HDR_TM_YMIX_DV_NUM + HDR_TM_LUT_TS_NUM + \
+        HDR_TM_LUT_VS_NUM + HDR_OETF_LUT_TS_NUM + HDR_OETF_LUT_VS_NUM \
+        )
 
 static const size_t NUM_HDR_COEFFICIENTS = HDR_LAYER_SFR_COUNT * MAX_LAYER_COUNT + 1; // HDR SFR COUNT x LAYER COUNT + COM_CTRL
 static const size_t NUM_HDR_MODE_REGS = MAX_LAYER_COUNT;
 
 class G2DHdrCommandWriter: public IG2DHdr10CommandWriter {
     std::bitset<MAX_LAYER_COUNT> mLayerAlphaMap;
-    std::array<displaycolor::IDisplayColorGS101::IDpp *, MAX_LAYER_COUNT> mLayerData{};
+    std::array<displaycolor::IDisplayColorZuma::IDpp *, MAX_LAYER_COUNT> mLayerData{};
 
 public:
     struct CommandList {
@@ -126,7 +146,7 @@ public:
             if (alpha_premultiplied)
                 hdr_mode.value |= G2D_LAYER_HDRMODE_DEMULT_ALPHA;
 
-            set_and_get_next_offset(HDR_MOD_CTRL(layer), modectl);
+            set_and_get_next_offset(HDR_HDR_MOD_CON(layer), modectl);
         }
 
         template <typename containerT>
@@ -143,15 +163,18 @@ public:
                 offset = set_and_get_next_offset(offset, item);
         }
 
-        void updateTmCoef(const displaycolor::IDisplayColorGS101::IDpp::DtmData::ConfigType &config, uint32_t offset) {
-            offset = set_and_get_next_offset(offset, config.coeff_r | (config.coeff_g << 10) | (config.coeff_b << 20));
-            offset = set_and_get_next_offset(offset, config.rng_x_min | (config.rng_x_max << 16));
-            set_and_get_next_offset(offset, config.rng_y_min | (config.rng_y_max << 16));
+        void updateTmCoef(const displaycolor::IDisplayColorZuma::IDpp::DtmData::ConfigType &config, uint32_t offset) {
+            offset = set_and_get_next_offset(offset, config.coeff_r);
+            offset = set_and_get_next_offset(offset, config.coeff_g);
+            offset = set_and_get_next_offset(offset, config.coeff_b);
+            offset = set_and_get_next_offset(offset, config.ymix_tf);
+            offset = set_and_get_next_offset(offset, config.ymix_vf);
+            offset = set_and_get_next_offset(offset, config.ymix_dv);
+            set_and_get_next_offset(offset, config.ymix_slope);
         }
 
-        void updateHdr() {
-            if (cmdlist.command_count > 0)
-                set_and_get_next_offset(HDR_COM_CTRL, VAL_HDR_CTRL_ENABLE);
+        void setEotfScalar(const uint16_t eotf_scalar, uint32_t offset) {
+                set_and_get_next_offset(eotf_scalar, offset);
         }
     } mCmdList;
 
@@ -174,7 +197,7 @@ public:
     }
 
     virtual bool setLayerOpaqueData(int index, void *data, size_t __unused len) override {
-        mLayerData[index] = reinterpret_cast<displaycolor::IDisplayColorGS101::IDpp *>(data);
+        mLayerData[index] = reinterpret_cast<displaycolor::IDisplayColorZuma::IDpp *>(data);
         return true;
     }
 
@@ -186,30 +209,48 @@ public:
             if (layer) {
                 uint32_t modectl = 0;
 
+                // EOTF settings
                 if (layer->EotfLut().enable && layer->EotfLut().config != nullptr) {
-                    mCmdList.updateDouble(layer->EotfLut().config->tf_data.posx, HDR_EOTF_POSX(i));
-                    mCmdList.updateSingle(layer->EotfLut().config->tf_data.posy, HDR_EOTF_POSY(i));
+                    mCmdList.setEotfScalar(layer->EotfLut().config->eotf_scalar,
+                                           HDR_EOTF_SCALER(i));
+
+                    if (layer->EotfLut().config->eotf_lut_en) {
+                        modectl |= HDR_ENABLE_EOTF_LUT_PQTABLE;
+                    } else {
+                        modectl |= HDR_ENABLE_EOTF_LUT_SFRRAMP;
+                        mCmdList.updateDouble(layer->EotfLut().config->tf_data.posx,
+                                              HDR_EOTF_LUT_TS(i));
+                        mCmdList.updateDouble(layer->EotfLut().config->tf_data.posy,
+                                              HDR_EOTF_LUT_VS(i));
+                    }
                     modectl |= HDR_ENABLE_EOTF;
                 }
 
+                // GM settings
                 if (layer->Gm().enable && layer->Gm().config != nullptr) {
                     mCmdList.updateSingle(layer->Gm().config->matrix_data.coeffs, HDR_GM_COEF(i));
                     mCmdList.updateSingle(layer->Gm().config->matrix_data.offsets, HDR_GM_OFF(i));
                     modectl |= HDR_ENABLE_GM;
                 }
 
+                // DTM settings
                 if (layer->Dtm().enable && layer->Dtm().config != nullptr) {
                     mCmdList.updateTmCoef(*layer->Dtm().config, HDR_TM_COEF(i));
-                    mCmdList.updateDouble(layer->Dtm().config->tf_data.posx, HDR_TM_POSX(i));
-                    mCmdList.updateSingle(layer->Dtm().config->tf_data.posy, HDR_TM_POSY(i));
-                    modectl |= HDR_ENABLE_DTM;
+                    mCmdList.updateDouble(layer->Dtm().config->tf_data.posx, HDR_TM_LUT_TS(i));
+                    mCmdList.updateDouble(layer->Dtm().config->tf_data.posy, HDR_TM_LUT_VS(i));
+                    modectl |= HDR_ENABLE_TM;
                 }
 
+                // OETF settings
                 if (layer->OetfLut().enable && layer->OetfLut().config != nullptr) {
-                    mCmdList.updateDouble(layer->OetfLut().config->tf_data.posx, HDR_OETF_POSX(i));
-                    mCmdList.updateDouble(layer->OetfLut().config->tf_data.posy, HDR_OETF_POSY(i));
+                    mCmdList.updateDouble(layer->OetfLut().config->tf_data.posx,
+                                          HDR_OETF_LUT_TS(i));
+                    mCmdList.updateDouble(layer->OetfLut().config->tf_data.posy,
+                                          HDR_OETF_LUT_VS(i));
                     modectl |= HDR_ENABLE_OETF;
                 }
+
+                modectl |= HDR_ENABLE_HDR;
 
                 mCmdList.updateLayer(i, mLayerAlphaMap[0], modectl);
             }
@@ -217,8 +258,6 @@ public:
             mLayerAlphaMap >>= 1;
             i++;
         }
-
-        mCmdList.updateHdr();
 
         // initialize for the next layer metadata configuration
         mLayerAlphaMap.reset();
