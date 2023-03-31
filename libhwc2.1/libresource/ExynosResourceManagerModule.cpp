@@ -271,7 +271,7 @@ uint32_t ExynosResourceManagerModule::calculateHWResourceAmount(ExynosDisplay *d
     HDEBUGLOGD(eDebugTDM, "mppSrc(%p) SRAM calculation start", mppSrc->mSrcImg.bufferHandle);
 
     int32_t transform = mppSrc->mSrcImg.transform;
-    int32_t compressed = mppSrc->mSrcImg.compressed;
+    int32_t compressType = mppSrc->mSrcImg.compressionInfo.type;
     bool rotation = (transform & HAL_TRANSFORM_ROT_90) ? true : false;
 
     int32_t width = mppSrc->mSrcImg.w;
@@ -301,7 +301,7 @@ uint32_t ExynosResourceManagerModule::calculateHWResourceAmount(ExynosDisplay *d
     if (rotation) {
         width = height;
         /* Rotation amount, Only YUV rotation is supported */
-        if (isFormatSBWC(format)) {
+        if (compressType == COMP_TYPE_SBWC) {
             /* Y and UV width should be aligned and should get sram for each Y and UV */
             int32_t width_y = pixel_align(width + kSramSBWCRotWidthAlign, kSramSBWCRotWidthAlign);
             int32_t width_c =
@@ -330,9 +330,9 @@ uint32_t ExynosResourceManagerModule::calculateHWResourceAmount(ExynosDisplay *d
         }
         HDEBUGLOGD(eDebugTDM, "+ rotation : %d", SRAMtotal);
     } else {
-        if (isFormatSBWC(format)) {
+        if (compressType == COMP_TYPE_SBWC) {
             width = pixel_align(width + kSramSBWCWidthMargin, kSramSBWCWidthAlign);
-        } else if (compressed) {
+        } else if (compressType == COMP_TYPE_AFBC) {
             /* Align for 8,4Byte/pixel formats */
             if (formatToBpp(format) > 16) {
                 width = pixel_align(width + kSramAFBC8B4BMargin, kSramAFBC8B4BAlign);
@@ -344,7 +344,7 @@ uint32_t ExynosResourceManagerModule::calculateHWResourceAmount(ExynosDisplay *d
         widthIndex = findWidthIndex(width);
 
         /* AFBC amount */
-        if (compressed) {
+        if (compressType == COMP_TYPE_AFBC) {
             formatIndex = (isFormatRgb(format) ? RGB : 0) | formatBPP;
             if (sramAmountMap.find(sramAmountParams(TDM_ATTR_AFBC, formatIndex, widthIndex)) !=
                 sramAmountMap.end())
@@ -354,7 +354,7 @@ uint32_t ExynosResourceManagerModule::calculateHWResourceAmount(ExynosDisplay *d
         }
 
         /* SBWC amount */
-        if (isFormatSBWC(format)) {
+        if (compressType == COMP_TYPE_SBWC) {
             if (sramAmountMap.find(sramAmountParams(TDM_ATTR_SBWC, SBWC_Y, widthIndex)) !=
                 sramAmountMap.end())
                 SRAMtotal += sramAmountMap.at(sramAmountParams(TDM_ATTR_SBWC, SBWC_Y, widthIndex));
