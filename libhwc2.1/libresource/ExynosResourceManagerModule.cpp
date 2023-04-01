@@ -46,8 +46,6 @@ ExynosResourceManagerModule::ExynosResourceManagerModule(ExynosDevice *device)
     const int socRev = atoi(value);
     mConstraintRev = socRev < 2 ? CONSTRAINT_A0 : CONSTRAINT_B0;
     ALOGD("%s(): ro.boot.hw.soc.rev=%s ConstraintRev=%d", __func__, value, mConstraintRev);
-    // TODO (b/266048745): Revert once G2D HDR code for zuma is merged
-    mM2mMPPs.clear();
 }
 
 ExynosResourceManagerModule::~ExynosResourceManagerModule() {}
