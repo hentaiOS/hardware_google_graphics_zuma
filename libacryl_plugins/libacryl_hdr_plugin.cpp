@@ -174,7 +174,7 @@ public:
         }
 
         void setEotfScalar(const uint16_t eotf_scalar, uint32_t offset) {
-                set_and_get_next_offset(eotf_scalar, offset);
+            set_and_get_next_offset(offset, eotf_scalar);
         }
     } mCmdList;
 
