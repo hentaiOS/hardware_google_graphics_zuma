@@ -118,15 +118,21 @@ static const exynos_mpp_t available_otf_mpp_units[] = {
         static_cast<uint32_t>(DPUF1), static_cast<uint32_t>(AXI1)},
 
     // DPP11(IDMA_GFS6) in DPUF1 is connected with AXI0 port
-    {MPP_DPP_GFS, MPP_LOGICAL_DPP_GFS, "DPP_GFS6", 6, 0, HWC_DISPLAY_SECONDARY_BIT,
+    {MPP_DPP_GFS, MPP_LOGICAL_DPP_GFS, "DPP_GFS6", 6, 0, HWC_DISPLAY_EXTERNAL_BIT,
         static_cast<uint32_t>(DPUF1), static_cast<uint32_t>(AXI0)},
     // DPP12(IDMA_VGRFS5) in DPUF1 is connected with AXI0 port
-    {MPP_DPP_VGRFS, MPP_LOGICAL_DPP_VGRFS, "DPP_VGRFS5", 5, 0, HWC_DISPLAY_SECONDARY_BIT,
+    {MPP_DPP_VGRFS, MPP_LOGICAL_DPP_VGRFS, "DPP_VGRFS5", 5, 0, HWC_DISPLAY_EXTERNAL_BIT,
         static_cast<uint32_t>(DPUF1), static_cast<uint32_t>(AXI0)},
     // DPP13(IDMA_GFS7) in DPUF1 is connected with AXI0 port
-    {MPP_DPP_GFS, MPP_LOGICAL_DPP_GFS, "DPP_GFS7", 7, 0, HWC_DISPLAY_SECONDARY_BIT,
+    {MPP_DPP_GFS, MPP_LOGICAL_DPP_GFS, "DPP_GFS7", 7, 0, HWC_DISPLAY_EXTERNAL_BIT,
         static_cast<uint32_t>(DPUF1), static_cast<uint32_t>(AXI0)},
 };
+
+static const std::array<exynos_display_t, 3> AVAILABLE_DISPLAY_UNITS = {{
+    {HWC_DISPLAY_PRIMARY, 0, "PrimaryDisplay", "/dev/dri/card0", ""},
+    {HWC_DISPLAY_PRIMARY, 1, "SecondaryDisplay", "/dev/dri/card0", ""},
+    {HWC_DISPLAY_EXTERNAL, 0, "ExternalDisplay", "/dev/dri/card0", ""}
+}};
 
 /*
  * Note :
