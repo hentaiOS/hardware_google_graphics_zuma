@@ -224,6 +224,11 @@ int32_t ExynosPrimaryDisplayModule::OperationRateManager::updateOperationRateLoc
 }
 
 void ExynosPrimaryDisplayModule::checkPreblendingRequirement() {
+    if (!hasDisplayColor()) {
+        DISPLAY_LOGD(eDebugTDM, "%s is skipped because of no displaycolor", __func__);
+        return;
+    }
+
     String8 log;
     int count = 0;
 
