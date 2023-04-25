@@ -80,11 +80,6 @@ int32_t ExynosPrimaryDisplayModule::OperationRateManager::setOperationRate(const
     return ret;
 }
 
-int32_t ExynosPrimaryDisplayModule::OperationRateManager::getRefreshRate(const int32_t config_id) {
-    constexpr float nsecsPerSec = std::chrono::nanoseconds(1s).count();
-    return round(nsecsPerSec / mDisplay->mDisplayConfigs[config_id].vsyncPeriod * 0.1f) * 10;
-}
-
 ExynosPrimaryDisplayModule::OperationRateManager::OperationRateManager(
         ExynosPrimaryDisplay* display, int32_t hsHz, int32_t nsHz)
       : gs201::ExynosPrimaryDisplayModule::OperationRateManager(),
@@ -122,7 +117,7 @@ int32_t ExynosPrimaryDisplayModule::OperationRateManager::onLowPowerMode(bool en
 
 int32_t ExynosPrimaryDisplayModule::OperationRateManager::onConfig(hwc2_config_t cfg) {
     Mutex::Autolock lock(mLock);
-    mDisplayRefreshRate = getRefreshRate(cfg);
+    mDisplayRefreshRate = mDisplay->getRefreshRate(cfg);
     OP_MANAGER_LOGD("rate=%d", mDisplayRefreshRate);
     updateOperationRateLocked(DispOpCondition::SET_CONFIG);
     return 0;
@@ -164,7 +159,7 @@ int32_t ExynosPrimaryDisplayModule::OperationRateManager::updateOperationRateLoc
     }
 
     int32_t desiredOpRate = mDisplayHsOperationRate;
-    int32_t curRefreshRate = getRefreshRate(mDisplay->mActiveConfig);
+    int32_t curRefreshRate = mDisplay->getRefreshRate(mDisplay->mActiveConfig);
     bool isSteadyLowRefreshRate =
             (mDisplayPeakRefreshRate && mDisplayPeakRefreshRate <= mDisplayNsOperationRate) ||
             mDisplayLowBatteryModeEnabled;
