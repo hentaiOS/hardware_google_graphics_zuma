@@ -54,7 +54,6 @@ class ExynosPrimaryDisplayModule : public gs201::ExynosPrimaryDisplayModule {
 
             int32_t updateOperationRateLocked(const DispOpCondition cond);
             int32_t setOperationRate(const int32_t rate);
-            int32_t getRefreshRate(const int32_t config_id);
 
             ExynosPrimaryDisplay* mDisplay;
             int32_t mDisplayHsOperationRate;
