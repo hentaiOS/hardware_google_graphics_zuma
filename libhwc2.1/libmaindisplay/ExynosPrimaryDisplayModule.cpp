@@ -170,7 +170,7 @@ int32_t ExynosPrimaryDisplayModule::OperationRateManager::updateOperationRateLoc
         desiredOpRate = mDisplayNsOperationRate;
     }
     // check blocking zone
-    if (mDisplayLastDbv < mDisplayNsMinDbv || dbv < mDisplayNsMinDbv) {
+    if (dbv < mDisplayNsMinDbv) {
         desiredOpRate = mDisplayHsOperationRate;
     }
 
@@ -195,7 +195,9 @@ int32_t ExynosPrimaryDisplayModule::OperationRateManager::updateOperationRateLoc
     } else if (cond == DispOpCondition::SET_DBV) {
         // TODO: tune brightness delta for different brightness curve and values
         int32_t delta = abs(dbv - mDisplayLastDbv);
-        if (delta > BRIGHTNESS_DELTA_THRESHOLD) effectiveOpRate = desiredOpRate;
+        if ((desiredOpRate == mDisplayHsOperationRate) || (delta > BRIGHTNESS_DELTA_THRESHOLD)) {
+            effectiveOpRate = desiredOpRate;
+        }
         mDisplayLastDbv = dbv;
         if (effectiveOpRate > LP_OP_RATE && (effectiveOpRate != mDisplayActiveOperationRate)) {
             OP_MANAGER_LOGD("brightness delta=%d", delta);
@@ -204,8 +206,8 @@ int32_t ExynosPrimaryDisplayModule::OperationRateManager::updateOperationRateLoc
         }
     }
 
-    if (!mDisplay->isConfigSettingEnabled()) {
-        OP_MANAGER_LOGI("rate switching is disabled, skip op rate update");
+    if (!mDisplay->isConfigSettingEnabled() && effectiveOpRate == mDisplayNsOperationRate) {
+        OP_MANAGER_LOGI("rate switching is disabled, skip NS op rate update");
         return ret;
     } else if (effectiveOpRate > LP_OP_RATE) {
         ret = setOperationRate(effectiveOpRate);
