@@ -92,6 +92,32 @@ static const restriction_key_t restriction_format_table[] = {
     {MPP_G2D, NODE_NONE, HAL_PIXEL_FORMAT_GOOGLE_NV12_SP_10B, 0},
 };
 
+
+static ppc_table ppc_table_map = {
+    /* G2D support only 2 plane YUV, so all YUV format should use YUV2P PPC table */
+    /* In case of Scale-Up, G2D should use same PPC table */
+    {PPC_IDX(MPP_G2D,PPC_FORMAT_YUV420,PPC_ROT_NO),   {2.2, 2.4, 4.3, 5.0, 4.5, 3.4, 3.4}},
+    {PPC_IDX(MPP_G2D,PPC_FORMAT_YUV420,PPC_ROT),      {2.2, 3.6, 4.2, 4.3, 3.6, 2.0, 2.0}},
+
+    {PPC_IDX(MPP_G2D,PPC_FORMAT_YUV422,PPC_ROT_NO),   {2.2, 2.4, 4.3, 5.0, 4.5, 3.4, 3.4}},
+    {PPC_IDX(MPP_G2D,PPC_FORMAT_YUV422,PPC_ROT),      {2.2, 3.6, 4.2, 4.3, 3.6, 2.0, 2.0}},
+
+    {PPC_IDX(MPP_G2D,PPC_FORMAT_P010,PPC_ROT_NO),     {2.2, 2.4, 4.3, 5.0, 4.5, 3.4, 3.4}},
+    {PPC_IDX(MPP_G2D,PPC_FORMAT_P010,PPC_ROT),        {2.2, 3.6, 4.2, 4.3, 3.6, 2.0, 2.0}},
+
+    {PPC_IDX(MPP_G2D,PPC_FORMAT_RGB32,PPC_ROT_NO),    {3.6, 2.0, 2.9, 2.3, 2.9, 3.9, 3.9}},
+    {PPC_IDX(MPP_G2D,PPC_FORMAT_RGB32,PPC_ROT),       {3.5, 3.2, 3.5, 3.4, 3.8, 3.8, 3.8}},
+
+    {PPC_IDX(MPP_G2D,PPC_FORMAT_SBWC,PPC_ROT_NO),     {3.2, 2.8, 3.0, 3.5, 2.9, 3.3, 3.3}},
+    {PPC_IDX(MPP_G2D,PPC_FORMAT_SBWC,PPC_ROT),        {2.2, 3.1, 3.2, 3.2, 2.8, 1.9, 1.9}},
+
+    {PPC_IDX(MPP_G2D,PPC_FORMAT_AFBC_RGB,PPC_ROT_NO), {3.1, 2.8, 2.6, 3.0, 3.7, 3.0, 3.0}},
+    {PPC_IDX(MPP_G2D,PPC_FORMAT_AFBC_RGB,PPC_ROT),    {2.1, 3.2, 3.2, 3.5, 3.4, 3.8, 3.8}},
+
+    {PPC_IDX(MPP_G2D,PPC_FORMAT_AFBC_YUV,PPC_ROT_NO), {3.0, 3.3, 3.1, 3.2, 3.4, 3.3, 3.3}},
+    {PPC_IDX(MPP_G2D,PPC_FORMAT_AFBC_YUV,PPC_ROT),    {2.2, 3.0, 3.4, 3.6, 3.6, 2.0, 2.0}},
+};
+
 } // namespace zuma
 
 #endif // EXYNOS_RESOURCE_RESTRICTION_ZUMA_H_
