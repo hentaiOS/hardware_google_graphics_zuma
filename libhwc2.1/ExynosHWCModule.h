@@ -45,8 +45,14 @@ const std::unordered_map<DPUblockId_t, String8> DPUBlocks = {
 typedef enum AXIPortId {
     AXI0,
     AXI1,
-    AXI_PORT_CNT,
+    AXI_PORT_MAX_CNT,
+    AXI_DONT_CARE
 } AXIPortId_t;
+
+const std::map<AXIPortId_t, String8> AXIPorts = {
+        {AXI0, String8("AXI0")},
+        {AXI1, String8("AXI1")},
+};
 
 typedef enum ConstraintRev {
     CONSTRAINT_NONE = 0, // don't care
@@ -143,26 +149,38 @@ class HWResourceIndexes {
     private:
         tdm_attr_t attr;
         DPUblockId_t DPUBlockNo;
-        int displayId;
+        AXIPortId_t axiId;
+        int dispType;
         ConstraintRev_t constraintRev;
 
     public:
-        HWResourceIndexes(tdm_attr_t _attr, DPUblockId_t _DPUBlockNo, int _displayId,
-                          ConstraintRev_t _constraintRev)
+        HWResourceIndexes(const tdm_attr_t &_attr, const DPUblockId_t &_DPUBlockNo,
+                          const AXIPortId_t &_axiId, const int &_dispType,
+                          const ConstraintRev_t &_constraintRev)
               : attr(_attr),
                 DPUBlockNo(_DPUBlockNo),
-                displayId(_displayId),
+                axiId(_axiId),
+                dispType(_dispType),
                 constraintRev(_constraintRev) {}
         bool operator<(const HWResourceIndexes& rhs) const {
             if (attr != rhs.attr) return attr < rhs.attr;
 
             if (DPUBlockNo != rhs.DPUBlockNo) return DPUBlockNo < rhs.DPUBlockNo;
 
-            if (displayId != rhs.displayId) return displayId < rhs.displayId;
+            if (dispType != rhs.dispType) return dispType < rhs.dispType;
+
+            if (axiId != AXI_DONT_CARE && rhs.axiId != AXI_DONT_CARE && axiId != rhs.axiId)
+                return axiId < rhs.axiId;
 
             if (constraintRev != CONSTRAINT_NONE) return constraintRev < rhs.constraintRev;
 
             return false;
+        }
+        String8 toString8() const {
+            String8 log;
+            log.appendFormat("attr=%d,DPUBlockNo=%d,axiId=%d,dispType=%d,constraintRev=%d", attr,
+                            DPUBlockNo, axiId, dispType, constraintRev);
+            return log;
         }
 };
 
@@ -176,67 +194,144 @@ typedef struct HWResourceAmounts {
  * Primary amount = total - others */
 
 const std::map<HWResourceIndexes, HWResourceAmounts_t> HWResourceTables = {
-        {HWResourceIndexes(TDM_ATTR_SRAM_AMOUNT, DPUF0, HWC_DISPLAY_PRIMARY, CONSTRAINT_NONE),
+        {HWResourceIndexes(TDM_ATTR_SRAM_AMOUNT, DPUF0, AXI_DONT_CARE, HWC_DISPLAY_PRIMARY,
+                           CONSTRAINT_NONE),
          {80, 80}},
-        {HWResourceIndexes(TDM_ATTR_SRAM_AMOUNT, DPUF0, HWC_DISPLAY_EXTERNAL, CONSTRAINT_NONE),
+        {HWResourceIndexes(TDM_ATTR_SRAM_AMOUNT, DPUF0, AXI_DONT_CARE, HWC_DISPLAY_EXTERNAL,
+                           CONSTRAINT_NONE),
          {0, 80}},
-        {HWResourceIndexes(TDM_ATTR_SRAM_AMOUNT, DPUF0, HWC_DISPLAY_VIRTUAL, CONSTRAINT_NONE),
+        {HWResourceIndexes(TDM_ATTR_SRAM_AMOUNT, DPUF0, AXI_DONT_CARE, HWC_DISPLAY_VIRTUAL,
+                           CONSTRAINT_NONE),
          {0, 80}},
-        {HWResourceIndexes(TDM_ATTR_SRAM_AMOUNT, DPUF1, HWC_DISPLAY_PRIMARY, CONSTRAINT_NONE),
-         {0, 80}},
-        {HWResourceIndexes(TDM_ATTR_SRAM_AMOUNT, DPUF1, HWC_DISPLAY_EXTERNAL, CONSTRAINT_NONE),
+        {HWResourceIndexes(TDM_ATTR_SRAM_AMOUNT, DPUF1, AXI_DONT_CARE, HWC_DISPLAY_PRIMARY,
+                           CONSTRAINT_NONE),
          {80, 80}},
-        {HWResourceIndexes(TDM_ATTR_SRAM_AMOUNT, DPUF1, HWC_DISPLAY_VIRTUAL, CONSTRAINT_NONE),
+        {HWResourceIndexes(TDM_ATTR_SRAM_AMOUNT, DPUF1, AXI_DONT_CARE, HWC_DISPLAY_EXTERNAL,
+                           CONSTRAINT_NONE),
+         {80, 80}},
+        {HWResourceIndexes(TDM_ATTR_SRAM_AMOUNT, DPUF1, AXI_DONT_CARE, HWC_DISPLAY_VIRTUAL,
+                           CONSTRAINT_NONE),
          {80, 80}},
 
-        {HWResourceIndexes(TDM_ATTR_SCALE, DPUF0, HWC_DISPLAY_PRIMARY, CONSTRAINT_NONE), {2, 2}},
-        {HWResourceIndexes(TDM_ATTR_SCALE, DPUF0, HWC_DISPLAY_EXTERNAL, CONSTRAINT_NONE), {0, 2}},
-        {HWResourceIndexes(TDM_ATTR_SCALE, DPUF0, HWC_DISPLAY_VIRTUAL, CONSTRAINT_NONE), {0, 2}},
-        {HWResourceIndexes(TDM_ATTR_SCALE, DPUF1, HWC_DISPLAY_PRIMARY, CONSTRAINT_NONE), {0, 2}},
-        {HWResourceIndexes(TDM_ATTR_SCALE, DPUF1, HWC_DISPLAY_EXTERNAL, CONSTRAINT_NONE), {2, 2}},
-        {HWResourceIndexes(TDM_ATTR_SCALE, DPUF1, HWC_DISPLAY_VIRTUAL, CONSTRAINT_NONE), {2, 2}},
+        {HWResourceIndexes(TDM_ATTR_SCALE, DPUF0, AXI_DONT_CARE, HWC_DISPLAY_PRIMARY,
+                           CONSTRAINT_NONE),
+         {2, 2}},
+        {HWResourceIndexes(TDM_ATTR_SCALE, DPUF0, AXI_DONT_CARE, HWC_DISPLAY_EXTERNAL,
+                           CONSTRAINT_NONE),
+         {0, 2}},
+        {HWResourceIndexes(TDM_ATTR_SCALE, DPUF0, AXI_DONT_CARE, HWC_DISPLAY_VIRTUAL,
+                           CONSTRAINT_NONE),
+         {0, 2}},
+        {HWResourceIndexes(TDM_ATTR_SCALE, DPUF1, AXI_DONT_CARE, HWC_DISPLAY_PRIMARY,
+                           CONSTRAINT_NONE),
+         {2, 2}},
+        {HWResourceIndexes(TDM_ATTR_SCALE, DPUF1, AXI_DONT_CARE, HWC_DISPLAY_EXTERNAL,
+                           CONSTRAINT_NONE),
+         {2, 2}},
+        {HWResourceIndexes(TDM_ATTR_SCALE, DPUF1, AXI_DONT_CARE, HWC_DISPLAY_VIRTUAL,
+                           CONSTRAINT_NONE),
+         {2, 2}},
 
-        {HWResourceIndexes(TDM_ATTR_SBWC, DPUF0, HWC_DISPLAY_PRIMARY, CONSTRAINT_NONE), {2, 2}},
-        {HWResourceIndexes(TDM_ATTR_SBWC, DPUF0, HWC_DISPLAY_EXTERNAL, CONSTRAINT_NONE), {0, 2}},
-        {HWResourceIndexes(TDM_ATTR_SBWC, DPUF0, HWC_DISPLAY_VIRTUAL, CONSTRAINT_NONE), {0, 2}},
-        {HWResourceIndexes(TDM_ATTR_SBWC, DPUF1, HWC_DISPLAY_PRIMARY, CONSTRAINT_NONE), {0, 2}},
-        {HWResourceIndexes(TDM_ATTR_SBWC, DPUF1, HWC_DISPLAY_EXTERNAL, CONSTRAINT_NONE), {2, 2}},
-        {HWResourceIndexes(TDM_ATTR_SBWC, DPUF1, HWC_DISPLAY_VIRTUAL, CONSTRAINT_NONE), {2, 2}},
+        {HWResourceIndexes(TDM_ATTR_SBWC, DPUF0, AXI_DONT_CARE, HWC_DISPLAY_PRIMARY,
+                           CONSTRAINT_NONE),
+         {2, 2}},
+        {HWResourceIndexes(TDM_ATTR_SBWC, DPUF0, AXI_DONT_CARE, HWC_DISPLAY_EXTERNAL,
+                           CONSTRAINT_NONE),
+         {0, 2}},
+        {HWResourceIndexes(TDM_ATTR_SBWC, DPUF0, AXI_DONT_CARE, HWC_DISPLAY_VIRTUAL,
+                           CONSTRAINT_NONE),
+         {0, 2}},
+        {HWResourceIndexes(TDM_ATTR_SBWC, DPUF1, AXI_DONT_CARE, HWC_DISPLAY_PRIMARY,
+                           CONSTRAINT_NONE),
+         {2, 2}},
+        {HWResourceIndexes(TDM_ATTR_SBWC, DPUF1, AXI_DONT_CARE, HWC_DISPLAY_EXTERNAL,
+                           CONSTRAINT_NONE),
+         {2, 2}},
+        {HWResourceIndexes(TDM_ATTR_SBWC, DPUF1, AXI_DONT_CARE, HWC_DISPLAY_VIRTUAL,
+                           CONSTRAINT_NONE),
+         {2, 2}},
 
-        {HWResourceIndexes(TDM_ATTR_AFBC, DPUF0, HWC_DISPLAY_PRIMARY, CONSTRAINT_NONE), {4, 4}},
-        {HWResourceIndexes(TDM_ATTR_AFBC, DPUF0, HWC_DISPLAY_EXTERNAL, CONSTRAINT_NONE), {0, 4}},
-        {HWResourceIndexes(TDM_ATTR_AFBC, DPUF0, HWC_DISPLAY_VIRTUAL, CONSTRAINT_NONE), {0, 4}},
-        {HWResourceIndexes(TDM_ATTR_AFBC, DPUF1, HWC_DISPLAY_PRIMARY, CONSTRAINT_NONE), {0, 4}},
-        {HWResourceIndexes(TDM_ATTR_AFBC, DPUF1, HWC_DISPLAY_EXTERNAL, CONSTRAINT_NONE), {4, 4}},
-        {HWResourceIndexes(TDM_ATTR_AFBC, DPUF1, HWC_DISPLAY_VIRTUAL, CONSTRAINT_NONE), {4, 4}},
+        {HWResourceIndexes(TDM_ATTR_AFBC, DPUF0, AXI_DONT_CARE, HWC_DISPLAY_PRIMARY,
+                           CONSTRAINT_NONE),
+         {4, 4}},
+        {HWResourceIndexes(TDM_ATTR_AFBC, DPUF0, AXI_DONT_CARE, HWC_DISPLAY_EXTERNAL,
+                           CONSTRAINT_NONE),
+         {0, 4}},
+        {HWResourceIndexes(TDM_ATTR_AFBC, DPUF0, AXI_DONT_CARE, HWC_DISPLAY_VIRTUAL,
+                           CONSTRAINT_NONE),
+         {0, 4}},
+        {HWResourceIndexes(TDM_ATTR_AFBC, DPUF1, AXI_DONT_CARE, HWC_DISPLAY_PRIMARY,
+                           CONSTRAINT_NONE),
+         {4, 4}},
+        {HWResourceIndexes(TDM_ATTR_AFBC, DPUF1, AXI_DONT_CARE, HWC_DISPLAY_EXTERNAL,
+                           CONSTRAINT_NONE),
+         {4, 4}},
+        {HWResourceIndexes(TDM_ATTR_AFBC, DPUF1, AXI_DONT_CARE, HWC_DISPLAY_VIRTUAL,
+                           CONSTRAINT_NONE),
+         {4, 4}},
 
-        {HWResourceIndexes(TDM_ATTR_ITP, DPUF0, HWC_DISPLAY_PRIMARY, CONSTRAINT_NONE), {4, 4}},
-        {HWResourceIndexes(TDM_ATTR_ITP, DPUF0, HWC_DISPLAY_EXTERNAL, CONSTRAINT_NONE), {0, 4}},
-        {HWResourceIndexes(TDM_ATTR_ITP, DPUF0, HWC_DISPLAY_VIRTUAL, CONSTRAINT_NONE), {0, 4}},
-        {HWResourceIndexes(TDM_ATTR_ITP, DPUF1, HWC_DISPLAY_PRIMARY, CONSTRAINT_NONE), {0, 4}},
-        {HWResourceIndexes(TDM_ATTR_ITP, DPUF1, HWC_DISPLAY_EXTERNAL, CONSTRAINT_NONE), {4, 4}},
-        {HWResourceIndexes(TDM_ATTR_ITP, DPUF1, HWC_DISPLAY_VIRTUAL, CONSTRAINT_NONE), {4, 4}},
+        {HWResourceIndexes(TDM_ATTR_ITP, DPUF0, AXI_DONT_CARE, HWC_DISPLAY_PRIMARY,
+                           CONSTRAINT_NONE),
+         {4, 4}},
+        {HWResourceIndexes(TDM_ATTR_ITP, DPUF0, AXI_DONT_CARE, HWC_DISPLAY_EXTERNAL,
+                           CONSTRAINT_NONE),
+         {0, 4}},
+        {HWResourceIndexes(TDM_ATTR_ITP, DPUF0, AXI_DONT_CARE, HWC_DISPLAY_VIRTUAL,
+                           CONSTRAINT_NONE),
+         {0, 4}},
+        {HWResourceIndexes(TDM_ATTR_ITP, DPUF1, AXI_DONT_CARE, HWC_DISPLAY_PRIMARY,
+                           CONSTRAINT_NONE),
+         {4, 4}},
+        {HWResourceIndexes(TDM_ATTR_ITP, DPUF1, AXI_DONT_CARE, HWC_DISPLAY_EXTERNAL,
+                           CONSTRAINT_NONE),
+         {4, 4}},
+        {HWResourceIndexes(TDM_ATTR_ITP, DPUF1, AXI_DONT_CARE, HWC_DISPLAY_VIRTUAL,
+                           CONSTRAINT_NONE),
+         {4, 4}},
 
-        {HWResourceIndexes(TDM_ATTR_ROT_90, DPUF0, HWC_DISPLAY_PRIMARY, CONSTRAINT_NONE), {2, 2}},
-        {HWResourceIndexes(TDM_ATTR_ROT_90, DPUF0, HWC_DISPLAY_EXTERNAL, CONSTRAINT_NONE), {0, 2}},
-        {HWResourceIndexes(TDM_ATTR_ROT_90, DPUF0, HWC_DISPLAY_VIRTUAL, CONSTRAINT_NONE), {0, 2}},
-        {HWResourceIndexes(TDM_ATTR_ROT_90, DPUF1, HWC_DISPLAY_PRIMARY, CONSTRAINT_NONE), {0, 2}},
-        {HWResourceIndexes(TDM_ATTR_ROT_90, DPUF1, HWC_DISPLAY_EXTERNAL, CONSTRAINT_NONE), {2, 2}},
-        {HWResourceIndexes(TDM_ATTR_ROT_90, DPUF1, HWC_DISPLAY_VIRTUAL, CONSTRAINT_NONE), {2, 2}},
+        {HWResourceIndexes(TDM_ATTR_ROT_90, DPUF0, AXI_DONT_CARE, HWC_DISPLAY_PRIMARY,
+                           CONSTRAINT_NONE),
+         {2, 2}},
+        {HWResourceIndexes(TDM_ATTR_ROT_90, DPUF0, AXI_DONT_CARE, HWC_DISPLAY_EXTERNAL,
+                           CONSTRAINT_NONE),
+         {0, 2}},
+        {HWResourceIndexes(TDM_ATTR_ROT_90, DPUF0, AXI_DONT_CARE, HWC_DISPLAY_VIRTUAL,
+                           CONSTRAINT_NONE),
+         {0, 2}},
+        {HWResourceIndexes(TDM_ATTR_ROT_90, DPUF1, AXI_DONT_CARE, HWC_DISPLAY_PRIMARY,
+                           CONSTRAINT_NONE),
+         {2, 2}},
+        {HWResourceIndexes(TDM_ATTR_ROT_90, DPUF1, AXI_DONT_CARE, HWC_DISPLAY_EXTERNAL,
+                           CONSTRAINT_NONE),
+         {2, 2}},
+        {HWResourceIndexes(TDM_ATTR_ROT_90, DPUF1, AXI_DONT_CARE, HWC_DISPLAY_VIRTUAL,
+                           CONSTRAINT_NONE),
+         {2, 2}},
 
-        {HWResourceIndexes(TDM_ATTR_WCG, DPUF0, HWC_DISPLAY_PRIMARY, CONSTRAINT_A0), {0, 2}},
-        {HWResourceIndexes(TDM_ATTR_WCG, DPUF0, HWC_DISPLAY_EXTERNAL, CONSTRAINT_A0), {2, 2}},
-        {HWResourceIndexes(TDM_ATTR_WCG, DPUF0, HWC_DISPLAY_VIRTUAL, CONSTRAINT_A0), {2, 2}},
-        {HWResourceIndexes(TDM_ATTR_WCG, DPUF1, HWC_DISPLAY_PRIMARY, CONSTRAINT_A0), {2, 2}},
-        {HWResourceIndexes(TDM_ATTR_WCG, DPUF1, HWC_DISPLAY_EXTERNAL, CONSTRAINT_A0), {0, 2}},
-        {HWResourceIndexes(TDM_ATTR_WCG, DPUF1, HWC_DISPLAY_VIRTUAL, CONSTRAINT_A0), {0, 2}},
-
-        {HWResourceIndexes(TDM_ATTR_WCG, DPUF0, HWC_DISPLAY_PRIMARY, CONSTRAINT_B0), {0, 4}},
-        {HWResourceIndexes(TDM_ATTR_WCG, DPUF0, HWC_DISPLAY_EXTERNAL, CONSTRAINT_B0), {4, 4}},
-        {HWResourceIndexes(TDM_ATTR_WCG, DPUF0, HWC_DISPLAY_VIRTUAL, CONSTRAINT_B0), {4, 4}},
-        {HWResourceIndexes(TDM_ATTR_WCG, DPUF1, HWC_DISPLAY_PRIMARY, CONSTRAINT_B0), {4, 4}},
-        {HWResourceIndexes(TDM_ATTR_WCG, DPUF1, HWC_DISPLAY_EXTERNAL, CONSTRAINT_B0), {0, 4}},
-        {HWResourceIndexes(TDM_ATTR_WCG, DPUF1, HWC_DISPLAY_VIRTUAL, CONSTRAINT_B0), {0, 4}},
+        {HWResourceIndexes(TDM_ATTR_WCG, DPUF0, AXI_DONT_CARE, HWC_DISPLAY_PRIMARY, CONSTRAINT_A0),
+         {2, 2}},
+        {HWResourceIndexes(TDM_ATTR_WCG, DPUF0, AXI_DONT_CARE, HWC_DISPLAY_EXTERNAL, CONSTRAINT_A0),
+         {0, 2}},
+        {HWResourceIndexes(TDM_ATTR_WCG, DPUF0, AXI_DONT_CARE, HWC_DISPLAY_VIRTUAL, CONSTRAINT_A0),
+         {0, 2}},
+        {HWResourceIndexes(TDM_ATTR_WCG, DPUF1, AXI_DONT_CARE, HWC_DISPLAY_PRIMARY, CONSTRAINT_A0),
+         {2, 2}},
+        {HWResourceIndexes(TDM_ATTR_WCG, DPUF1, AXI_DONT_CARE, HWC_DISPLAY_EXTERNAL, CONSTRAINT_A0),
+         {2, 2}},
+        {HWResourceIndexes(TDM_ATTR_WCG, DPUF1, AXI_DONT_CARE, HWC_DISPLAY_VIRTUAL, CONSTRAINT_A0),
+         {2, 2}},
+        {HWResourceIndexes(TDM_ATTR_WCG, DPUF0, AXI0, HWC_DISPLAY_PRIMARY, CONSTRAINT_B0), {2, 2}},
+        {HWResourceIndexes(TDM_ATTR_WCG, DPUF0, AXI0, HWC_DISPLAY_EXTERNAL, CONSTRAINT_B0), {0, 2}},
+        {HWResourceIndexes(TDM_ATTR_WCG, DPUF0, AXI0, HWC_DISPLAY_VIRTUAL, CONSTRAINT_B0), {0, 2}},
+        {HWResourceIndexes(TDM_ATTR_WCG, DPUF0, AXI1, HWC_DISPLAY_PRIMARY, CONSTRAINT_B0), {2, 2}},
+        {HWResourceIndexes(TDM_ATTR_WCG, DPUF0, AXI1, HWC_DISPLAY_EXTERNAL, CONSTRAINT_B0), {0, 2}},
+        {HWResourceIndexes(TDM_ATTR_WCG, DPUF0, AXI1, HWC_DISPLAY_VIRTUAL, CONSTRAINT_B0), {0, 2}},
+        {HWResourceIndexes(TDM_ATTR_WCG, DPUF1, AXI0, HWC_DISPLAY_PRIMARY, CONSTRAINT_B0), {2, 2}},
+        {HWResourceIndexes(TDM_ATTR_WCG, DPUF1, AXI0, HWC_DISPLAY_EXTERNAL, CONSTRAINT_B0), {2, 2}},
+        {HWResourceIndexes(TDM_ATTR_WCG, DPUF1, AXI0, HWC_DISPLAY_VIRTUAL, CONSTRAINT_B0), {2, 2}},
+        {HWResourceIndexes(TDM_ATTR_WCG, DPUF1, AXI1, HWC_DISPLAY_PRIMARY, CONSTRAINT_B0), {2, 2}},
+        {HWResourceIndexes(TDM_ATTR_WCG, DPUF1, AXI1, HWC_DISPLAY_EXTERNAL, CONSTRAINT_B0), {2, 2}},
+        {HWResourceIndexes(TDM_ATTR_WCG, DPUF1, AXI1, HWC_DISPLAY_VIRTUAL, CONSTRAINT_B0), {2, 2}},
 };
 
 typedef enum lbWidthIndex {
