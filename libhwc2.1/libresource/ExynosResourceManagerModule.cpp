@@ -45,6 +45,8 @@ ExynosResourceManagerModule::ExynosResourceManagerModule(ExynosDevice *device)
     property_get("ro.boot.hw.soc.rev", value, "2");
     const int socRev = atoi(value);
     mConstraintRev = socRev < 2 ? CONSTRAINT_A0 : CONSTRAINT_B0;
+    HWAttrs.at(TDM_ATTR_WCG).loadSharing =
+            (mConstraintRev == CONSTRAINT_A0) ? LS_DPUF : LS_DPUF_AXI;
     ALOGD("%s(): ro.boot.hw.soc.rev=%s ConstraintRev=%d", __func__, value, mConstraintRev);
 }
 
@@ -52,14 +54,19 @@ ExynosResourceManagerModule::~ExynosResourceManagerModule() {}
 
 bool ExynosResourceManagerModule::checkTDMResource(ExynosDisplay *display, ExynosMPP *currentMPP,
                                                    ExynosMPPSource *mppSrc) {
-    std::map<tdm_attr_t, uint32_t> accumulatedAmount;
-    uint32_t currentBlockId = currentMPP->getHWBlockId();
+    std::map<tdm_attr_t, uint32_t> accumulatedDPUFAmount;
+    std::map<tdm_attr_t, uint32_t> accumulatedDPUFAXIAmount;
+    const uint32_t blkId = currentMPP->getHWBlockId();
+    const uint32_t axiId = currentMPP->getAXIPortId();
     HDEBUGLOGD(eDebugTDM, "%s : %p trying to assign to %s, compare with layers", __func__,
                mppSrc->mSrcImg.bufferHandle, currentMPP->mName.string());
-    for (auto layer : display->mLayers) {
-        ExynosMPP *otfMPP = layer->mOtfMPP;
-        if (!otfMPP) continue;
-        getAmounts(display, otfMPP, currentBlockId, layer, mppSrc, accumulatedAmount);
+    ExynosLayer *layer = (mppSrc->mSourceType == MPP_SOURCE_LAYER) ? (ExynosLayer *)mppSrc : nullptr;
+
+    for (auto compLayer : display->mLayers) {
+        ExynosMPP *otfMPP = compLayer->mOtfMPP;
+        if (!otfMPP || layer == compLayer) continue;
+        getAmounts(display, blkId, axiId, otfMPP, mppSrc, compLayer,
+                   accumulatedDPUFAmount, accumulatedDPUFAXIAmount);
     }
 
     if (display->mExynosCompositionInfo.mHasCompositionLayer) {
@@ -68,8 +75,8 @@ bool ExynosResourceManagerModule::checkTDMResource(ExynosDisplay *display, Exyno
                    __func__, mppSrc->mSrcImg.bufferHandle, currentMPP->mName.string());
         ExynosMPP *otfMPP = display->mExynosCompositionInfo.mOtfMPP;
         if (otfMPP)
-            getAmounts(display, otfMPP, currentBlockId, &display->mExynosCompositionInfo, mppSrc,
-                       accumulatedAmount);
+            getAmounts(display, blkId, axiId, otfMPP, mppSrc, &display->mExynosCompositionInfo,
+                       accumulatedDPUFAmount, accumulatedDPUFAXIAmount);
     }
 
     if (display->mClientCompositionInfo.mHasCompositionLayer) {
@@ -78,22 +85,28 @@ bool ExynosResourceManagerModule::checkTDMResource(ExynosDisplay *display, Exyno
                    __func__, mppSrc->mSrcImg.bufferHandle, currentMPP->mName.string());
         ExynosMPP *otfMPP = display->mClientCompositionInfo.mOtfMPP;
         if (otfMPP)
-            getAmounts(display, otfMPP, currentBlockId, &display->mClientCompositionInfo, mppSrc,
-                       accumulatedAmount);
+            getAmounts(display, blkId, axiId, otfMPP, mppSrc, &display->mClientCompositionInfo,
+                       accumulatedDPUFAmount, accumulatedDPUFAXIAmount);
     }
 
-    DisplayTDMInfo::ResourceAmount_t amount = {0};
     for (auto attr = HWAttrs.begin(); attr != HWAttrs.end(); attr++) {
+        const LoadSharing_t &loadSharing = attr->second.loadSharing;
         uint32_t currentAmount = mppSrc->getHWResourceAmount(attr->first);
-        amount = display->mDisplayTDMInfo[currentBlockId].getAvailableAmount(attr->first);
+        auto &accumulatedAmount =
+                (loadSharing == LS_DPUF) ? accumulatedDPUFAmount : accumulatedDPUFAXIAmount;
+        const auto &TDMInfoIdx =
+                std::make_pair(blkId,
+                               (loadSharing == LS_DPUF) ? AXI_DONT_CARE : axiId);
+        int32_t totalAmount =
+                display->mDisplayTDMInfo[TDMInfoIdx].getAvailableAmount(attr->first).totalAmount;
         HDEBUGLOGD(eDebugTDM,
-                   "%s, layer[%p] -> %s attr[%s], accumulated : %d, current : %d, total : %d",
+                   "%s, layer[%p] -> %s attr[%s],ls=%d,accumulated:%d,current:%d,total: %d",
                    __func__, mppSrc->mSrcImg.bufferHandle, currentMPP->mName.string(),
-                   attr->second.string(), accumulatedAmount[attr->first], currentAmount,
-                   amount.totalAmount);
-        if (accumulatedAmount[attr->first] + currentAmount > amount.totalAmount) {
+                   attr->second.name.string(), loadSharing, accumulatedAmount[attr->first],
+                   currentAmount, totalAmount);
+        if (accumulatedAmount[attr->first] + currentAmount > totalAmount) {
             HDEBUGLOGD(eDebugTDM, "%s, %s could not assigned by attr[%s]", __func__,
-                       currentMPP->mName.string(), attr->second.string());
+                       currentMPP->mName.string(), attr->second.name.string());
             return false;
         }
     }
@@ -137,6 +150,41 @@ bool ExynosResourceManagerModule::isHWResourceAvailable(ExynosDisplay *display,
     return true;
 }
 
+void ExynosResourceManagerModule::setupHWResource(const tdm_attr_t &tdmAttrId, const String8 &name,
+                                                  const DPUblockId_t &blkId,
+                                                  const AXIPortId_t &axiId, ExynosDisplay *display,
+                                                  ExynosDisplay *addedDisplay,
+                                                  const ConstraintRev_t &constraintsRev) {
+    const int32_t dispType = display->mType;
+    const auto &resourceIdx = HWResourceIndexes(tdmAttrId, blkId, axiId, dispType, constraintsRev);
+    const auto &iter = mHWResourceTables->find(resourceIdx);
+    if (iter != mHWResourceTables->end()) {
+        auto &hwResource = iter->second;
+        const auto &TDMInfoIdx = (HWAttrs.at(tdmAttrId).loadSharing == LS_DPUF)
+                ? std::make_pair(blkId, AXI_DONT_CARE)
+                : std::make_pair(blkId, axiId);
+        uint32_t amount = (addedDisplay == nullptr) ? hwResource.maxAssignedAmount
+                                                    : hwResource.totalAmount -
+                        addedDisplay->mDisplayTDMInfo[TDMInfoIdx]
+                                .getAvailableAmount(tdmAttrId)
+                                .totalAmount;
+        display->mDisplayTDMInfo[TDMInfoIdx].initTDMInfo(DisplayTDMInfo::ResourceAmount_t{amount},
+                                                         tdmAttrId);
+        if (addedDisplay == nullptr) {
+            HDEBUGLOGD(eDebugTDM, "(%s=>%s) : %s amount is updated to %d",
+                       resourceIdx.toString8().string(), iter->first.toString8().string(),
+                       name.string(), amount);
+        } else {
+            HDEBUGLOGD(eDebugTDM,
+                       "(%s=>%s) : hwResource.totalAmount=%d %s amount is updated to %d",
+                       resourceIdx.toString8().string(), iter->first.toString8().string(),
+                       hwResource.totalAmount, name.string(), amount);
+        }
+    } else {
+        ALOGW("(%s): cannot find resource for %s", resourceIdx.toString8().string(), name.string());
+    }
+}
+
 uint32_t ExynosResourceManagerModule::setDisplaysTDMInfo()
 {
     ExynosDisplay *addedDisplay = nullptr;
@@ -161,32 +209,14 @@ uint32_t ExynosResourceManagerModule::setDisplaysTDMInfo()
     ExynosDisplay *primaryDisplay = getDisplay(getDisplayId(HWC_DISPLAY_PRIMARY, 0));
     for (auto attr = HWAttrs.begin(); attr != HWAttrs.end(); attr++) {
         for (auto blockId = DPUBlocks.begin(); blockId != DPUBlocks.end(); blockId++) {
-            if (mHWResourceTables->find(HWResourceIndexes(attr->first, blockId->first,
-                                                          primaryDisplay->mType, mConstraintRev)) !=
-                mHWResourceTables->end()) {
-                uint32_t total =
-                        mHWResourceTables
-                                ->at(HWResourceIndexes(attr->first, blockId->first,
-                                                       primaryDisplay->mType, mConstraintRev))
-                                .totalAmount;
-
-                if (addedDisplay != nullptr) {
-                    total = total -
-                            addedDisplay->mDisplayTDMInfo[blockId->first]
-                                    .getAvailableAmount(attr->first)
-                                    .totalAmount;
+            if (attr->second.loadSharing == LS_DPUF) {
+                setupHWResource(attr->first, attr->second.name, blockId->first, AXI_DONT_CARE,
+                                primaryDisplay, addedDisplay, mConstraintRev);
+            } else if (attr->second.loadSharing == LS_DPUF_AXI) {
+                for (auto axi = AXIPorts.begin(); axi != AXIPorts.end(); ++axi) {
+                    setupHWResource(attr->first, attr->second.name, blockId->first, axi->first,
+                                    primaryDisplay, addedDisplay, mConstraintRev);
                 }
-
-                DisplayTDMInfo::ResourceAmount_t amount = {
-                        0,
-                };
-                amount.totalAmount = total;
-                primaryDisplay->mDisplayTDMInfo[blockId->first].initTDMInfo(amount, attr->first);
-                HDEBUGLOGD(eDebugTDM, "Primary display (block : %d) : %s amount is updated to %d",
-                           blockId->first, attr->second.string(), amount.totalAmount);
-            } else {
-                ALOGW("Primary display (block : %d) : cannot find resource for %s", blockId->first,
-                      attr->second.string());
             }
         }
     }
@@ -195,14 +225,28 @@ uint32_t ExynosResourceManagerModule::setDisplaysTDMInfo()
         for (auto &display : mDisplays) {
             for (auto attr = HWAttrs.begin(); attr != HWAttrs.end(); attr++) {
                 for (auto blockId = DPUBlocks.begin(); blockId != DPUBlocks.end(); blockId++) {
-                    DisplayTDMInfo::ResourceAmount_t amount = {
-                            0,
-                    };
-                    amount = display->mDisplayTDMInfo[blockId->first].getAvailableAmount(
-                            attr->first);
-                    HDEBUGLOGD(eDebugTDM, "%s : [%s] display: %d, block : %d, amount : %d(%s)",
-                               __func__, attr->second.string(), display->mType, blockId->first,
-                               amount.totalAmount, display->isEnabled() ? "used" : "not used");
+                    if (attr->second.loadSharing == LS_DPUF) {
+                        const auto &TDMInfoId = std::make_pair(blockId->first, AXI_DONT_CARE);
+                        int32_t amount = display->mDisplayTDMInfo[TDMInfoId]
+                                                 .getAvailableAmount(attr->first)
+                                                 .totalAmount;
+                        HDEBUGLOGD(eDebugTDM, "%s : [%s] display:%d,block:%d, amount : %d(%s)",
+                                   __func__, attr->second.name.string(), display->mType,
+                                   blockId->first, amount,
+                                   display->isEnabled() ? "used" : "not used");
+                    } else {
+                        for (auto axi = AXIPorts.begin(); axi != AXIPorts.end(); ++axi) {
+                            const auto &TDMInfoId = std::make_pair(blockId->first, axi->first);
+                            int32_t amount = display->mDisplayTDMInfo[TDMInfoId]
+                                                     .getAvailableAmount(attr->first)
+                                                     .totalAmount;
+                            HDEBUGLOGD(eDebugTDM,
+                                       "%s : [%s] display:%d,block:%d,axi:%d, amount:%d(%s)",
+                                       __func__, attr->second.name.string(), display->mType,
+                                       blockId->first, axi->first, amount,
+                                       display->isEnabled() ? "used" : "not used");
+                        }
+                    }
                 }
             }
         }
@@ -220,24 +264,14 @@ uint32_t ExynosResourceManagerModule::initDisplaysTDMInfo()
     for (auto &display : mDisplays) {
         for (auto attr = HWAttrs.begin(); attr != HWAttrs.end(); attr++) {
             for (auto blockId = DPUBlocks.begin(); blockId != DPUBlocks.end(); blockId++) {
-                if (mHWResourceTables->find(HWResourceIndexes(attr->first, blockId->first,
-                                                              display->mType, mConstraintRev)) !=
-                    mHWResourceTables->end()) {
-                    DisplayTDMInfo::ResourceAmount_t amount = {
-                            0,
-                    };
-                    amount.totalAmount =
-                            mHWResourceTables
-                                    ->at(HWResourceIndexes(attr->first, blockId->first,
-                                                           display->mType, mConstraintRev))
-                                    .maxAssignedAmount;
-                    display->mDisplayTDMInfo[blockId->first].initTDMInfo(amount, attr->first);
-                    HDEBUGLOGD(eDebugTDM, "%s, [attr:%d] display : %d, block : %d, amount : %d",
-                               __func__, attr->first, display->mType, blockId->first,
-                               amount.totalAmount);
-                } else {
-                    ALOGW("%s, [attr:%d] display : %d, block : %d no resource", __func__,
-                          attr->first, display->mType, blockId->first);
+                if (attr->second.loadSharing == LS_DPUF) {
+                    setupHWResource(attr->first, attr->second.name, blockId->first, AXI_DONT_CARE,
+                                    display, nullptr, mConstraintRev);
+                } else if (attr->second.loadSharing == LS_DPUF_AXI) {
+                    for (auto axi = AXIPorts.begin(); axi != AXIPorts.end(); ++axi) {
+                        setupHWResource(attr->first, attr->second.name, blockId->first, axi->first,
+                                        display, nullptr, mConstraintRev);
+                    }
                 }
             }
         }
@@ -265,8 +299,6 @@ uint32_t ExynosResourceManagerModule::calculateHWResourceAmount(ExynosDisplay *d
         layer->setDstExynosImage(&dst_img);
         layer->setExynosImage(src_img, dst_img);
     }
-
-    HDEBUGLOGD(eDebugTDM, "mppSrc(%p) SRAM calculation start", mppSrc->mSrcImg.bufferHandle);
 
     int32_t transform = mppSrc->mSrcImg.transform;
     int32_t compressType = mppSrc->mSrcImg.compressionInfo.type;
@@ -434,9 +466,9 @@ int32_t ExynosResourceManagerModule::otfMppReordering(ExynosDisplay *display,
             : (needHdrProcessing(display, src, dst) ? ORDER_WCG : ORDER_AXI);
 
     int usedAFBCCount[DPU_BLOCK_CNT] = {0};
-    int usedWCGCount[DPU_BLOCK_CNT] = {0};
+    int usedWCGCount[DPU_BLOCK_CNT * AXI_PORT_MAX_CNT] = {0};
     int usedBlockCount[DPU_BLOCK_CNT] = {0};
-    int usedAXIPortCount[AXI_PORT_CNT] = {0};
+    int usedAXIPortCount[AXI_PORT_MAX_CNT] = {0};
 
     auto orderPolicy = [&](const void *lhs, const void *rhs) -> bool {
         if (lhs == NULL || rhs == NULL) {
@@ -470,8 +502,10 @@ int32_t ExynosResourceManagerModule::otfMppReordering(ExynosDisplay *display,
             if (l->mAttr & MPP_ATTR_WCG) {
                 /* If layer is WCG, DPU block that WCG HW block belongs
                  * which has not been used much should be placed in the front */
-                if (usedWCGCount[l->mHWBlockId] != usedWCGCount[r->mHWBlockId])
-                    return usedWCGCount[l->mHWBlockId] < usedWCGCount[r->mHWBlockId];
+                if (usedWCGCount[l->mHWBlockId * AXI_PORT_MAX_CNT + l->mAXIPortId] !=
+                    usedWCGCount[r->mHWBlockId * AXI_PORT_MAX_CNT + r->mAXIPortId])
+                    return usedWCGCount[l->mHWBlockId * AXI_PORT_MAX_CNT + l->mAXIPortId] <
+                        usedWCGCount[r->mHWBlockId * AXI_PORT_MAX_CNT + r->mAXIPortId];
             }
         }
 
@@ -570,24 +604,32 @@ bool ExynosResourceManagerModule::isOverlapped(ExynosDisplay *display, ExynosMPP
     return false;
 }
 
-uint32_t ExynosResourceManagerModule::getAmounts(ExynosDisplay *display, ExynosMPP *otfMPP,
-                                                 uint32_t currentBlockId, ExynosMPPSource *compare,
-                                                 ExynosMPPSource *current,
-                                                 std::map<tdm_attr_t, uint32_t> &amounts)
-{
-    uint32_t blockId = otfMPP->getHWBlockId();
-    if ((currentBlockId == blockId) && (isOverlapped(display, current, compare))) {
+uint32_t ExynosResourceManagerModule::getAmounts(ExynosDisplay *display,
+                                                 uint32_t currentBlockId, uint32_t currentAXIId,
+                                                 ExynosMPP *compOtfMPP,
+                                                 ExynosMPPSource *curSrc, ExynosMPPSource *compSrc,
+                                                 std::map<tdm_attr_t, uint32_t> &DPUFAmounts,
+                                                 std::map<tdm_attr_t, uint32_t> &AXIAmounts) {
+    const uint32_t blockId = compOtfMPP->getHWBlockId();
+    const uint32_t AXIId = compOtfMPP->getAXIPortId();
+    if (currentBlockId == blockId && isOverlapped(display, curSrc, compSrc)) {
         String8 log;
         if (hwcCheckDebugMessages(eDebugTDM)) {
-            log.appendFormat("%s", otfMPP->mName.string());
+            log.appendFormat("%s", compOtfMPP->mName.string());
         }
         for (auto attr = HWAttrs.begin(); attr != HWAttrs.end(); attr++) {
-            uint32_t compareAmount = compare->getHWResourceAmount(attr->first);
+            uint32_t compareAmount = compSrc->getHWResourceAmount(attr->first);
             if (hwcCheckDebugMessages(eDebugTDM)) {
-                log.appendFormat(", attr %s %d(+ %d)", attr->second.string(), amounts[attr->first],
-                                 compareAmount);
+                log.appendFormat(", attr %s DPUF-%d(+ %d)", attr->second.name.string(),
+                                 DPUFAmounts[attr->first], compareAmount);
             }
-            amounts[attr->first] += compareAmount;
+            DPUFAmounts[attr->first] += compareAmount;
+            if (attr->second.loadSharing == LS_DPUF_AXI && currentAXIId == AXIId) {
+                if (hwcCheckDebugMessages(eDebugTDM)) {
+                    log.appendFormat(",AXI-%d(+ %d)", AXIAmounts[attr->first], compareAmount);
+                }
+                AXIAmounts[attr->first] += compareAmount;
+            }
         }
         HDEBUGLOGD(eDebugTDM, "%s %s", __func__, log.string());
     }

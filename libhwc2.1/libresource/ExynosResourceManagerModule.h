@@ -37,12 +37,19 @@ class ExynosResourceManagerModule : public gs201::ExynosResourceManagerModule {
 
         bool isOverlapped(ExynosDisplay *display, ExynosMPPSource *current,
                           ExynosMPPSource *compare);
-        uint32_t getAmounts(ExynosDisplay *display, ExynosMPP *otfMPP, uint32_t currentBlockId,
-                            ExynosMPPSource *compare, ExynosMPPSource *current,
-                            std::map<tdm_attr_t, uint32_t> &amounts);
+        uint32_t getAmounts(ExynosDisplay *display,
+                            uint32_t currentBlockId, uint32_t currentAXIId,
+                            ExynosMPP *compOtfMPP,
+                            ExynosMPPSource *curSrc, ExynosMPPSource *compSrc,
+                            std::map<tdm_attr_t, uint32_t> &DPUFAmounts,
+                            std::map<tdm_attr_t, uint32_t> &AXIAmounts);
         bool checkTDMResource(ExynosDisplay *display, ExynosMPP *currentMPP,
                               ExynosMPPSource *mppSrc);
         const std::map<HWResourceIndexes, HWResourceAmounts_t> *mHWResourceTables = nullptr;
+        void setupHWResource(const tdm_attr_t &tdmAttrId, const String8 &name,
+                             const DPUblockId_t &blkId, const AXIPortId_t &axiId,
+                             ExynosDisplay *display, ExynosDisplay *addedDisplay,
+                             const ConstraintRev_t &constraintsRev);
 
     private:
         ConstraintRev_t mConstraintRev;
