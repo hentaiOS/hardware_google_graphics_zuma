@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#define ATRACE_TAG (ATRACE_TAG_GRAPHICS | ATRACE_TAG_HAL)
+
 #include "ExynosPrimaryDisplayModule.h"
 
 #include <cutils/properties.h>
@@ -56,10 +58,13 @@ int32_t ExynosPrimaryDisplayModule::validateWinConfigData()
 int32_t ExynosPrimaryDisplayModule::OperationRateManager::getOperationRate() {
     std::string op_rate_str;
 
+    ATRACE_CALL();
     if (mDisplayPowerMode == HWC2_POWER_MODE_DOZE ||
         mDisplayPowerMode == HWC2_POWER_MODE_DOZE_SUSPEND) {
         return LP_OP_RATE;
-    } else if (readLineFromFile(mSysfsPath, op_rate_str, '\n') != OK) {
+    }
+
+    if (readLineFromFile(mSysfsPath, op_rate_str, '\n') != OK) {
         OP_MANAGER_LOGE("failed to read %s", mSysfsPath.c_str());
         return 0;
     }
@@ -69,6 +74,7 @@ int32_t ExynosPrimaryDisplayModule::OperationRateManager::getOperationRate() {
 int32_t ExynosPrimaryDisplayModule::OperationRateManager::setOperationRate(const int32_t rate) {
     if (!mDisplayActiveOperationRate || mDisplayActiveOperationRate == rate) return NO_ERROR;
 
+    ATRACE_CALL();
     int32_t ret = writeIntToFile(mSysfsPath.c_str(), rate);
     if (ret == NO_ERROR) {
         mDisplayActiveOperationRate = rate;
@@ -174,14 +180,12 @@ int32_t ExynosPrimaryDisplayModule::OperationRateManager::updateOperationRateLoc
         desiredOpRate = mDisplayHsOperationRate;
     }
 
-    if (mDisplayPowerMode == HWC2_POWER_MODE_ON) {
-        mDisplayActiveOperationRate = getOperationRate();
-    } else if (mDisplayPowerMode == HWC2_POWER_MODE_DOZE ||
-               mDisplayPowerMode == HWC2_POWER_MODE_DOZE_SUSPEND) {
+    if (mDisplayPowerMode == HWC2_POWER_MODE_DOZE ||
+        mDisplayPowerMode == HWC2_POWER_MODE_DOZE_SUSPEND) {
         mDisplayActiveOperationRate = LP_OP_RATE;
         desiredOpRate = mDisplayActiveOperationRate;
         effectiveOpRate = desiredOpRate;
-    } else {
+    } else if (mDisplayPowerMode != HWC2_POWER_MODE_ON) {
         return ret;
     }
 
@@ -191,6 +195,9 @@ int32_t ExynosPrimaryDisplayModule::OperationRateManager::updateOperationRateLoc
             (curRefreshRate <= mDisplayHsOperationRate))
             effectiveOpRate = mDisplayHsOperationRate;
     } else if (cond == DispOpCondition::PANEL_SET_POWER) {
+        if (mDisplayPowerMode == HWC2_POWER_MODE_ON) {
+            mDisplayActiveOperationRate = getOperationRate();
+        }
         effectiveOpRate = desiredOpRate;
     } else if (cond == DispOpCondition::SET_DBV) {
         // TODO: tune brightness delta for different brightness curve and values
