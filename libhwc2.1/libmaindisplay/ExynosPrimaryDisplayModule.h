@@ -43,7 +43,7 @@ class ExynosPrimaryDisplayModule : public gs201::ExynosPrimaryDisplayModule {
             int32_t onConfig(hwc2_config_t cfg) override;
             int32_t onBrightness(uint32_t dbv) override;
             int32_t onPowerMode(int32_t mode) override;
-            int32_t getOperationRate() override;
+            int32_t getTargetOperationRate() override;
 
         private:
             enum class DispOpCondition : uint32_t {
@@ -54,12 +54,12 @@ class ExynosPrimaryDisplayModule : public gs201::ExynosPrimaryDisplayModule {
             };
 
             int32_t updateOperationRateLocked(const DispOpCondition cond);
-            int32_t setOperationRate(const int32_t rate);
+            int32_t setTargetOperationRate(const int32_t rate);
 
             ExynosPrimaryDisplay* mDisplay;
             int32_t mDisplayHsOperationRate;
             int32_t mDisplayNsOperationRate;
-            int32_t mDisplayActiveOperationRate;
+            int32_t mDisplayTargetOperationRate;
             int32_t mDisplayNsMinDbv;
             int32_t mDisplayPeakRefreshRate;
             int32_t mDisplayRefreshRate;
@@ -68,7 +68,6 @@ class ExynosPrimaryDisplayModule : public gs201::ExynosPrimaryDisplayModule {
             std::optional<hwc2_power_mode_t> mDisplayPowerMode;
             bool mDisplayLowBatteryModeEnabled;
             Mutex mLock;
-            std::string mSysfsPath;
 
             static constexpr uint32_t BRIGHTNESS_DELTA_THRESHOLD = 10;
             static constexpr uint32_t LP_OP_RATE = 30;
