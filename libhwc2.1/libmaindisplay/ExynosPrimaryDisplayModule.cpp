@@ -96,8 +96,14 @@ ExynosPrimaryDisplayModule::OperationRateManager::~OperationRateManager() {}
 
 int32_t ExynosPrimaryDisplayModule::OperationRateManager::onPeakRefreshRate(uint32_t rate) {
     Mutex::Autolock lock(mLock);
+    char rateStr[PROP_VALUE_MAX];
+    std::sprintf(rateStr, "%d", rate);
+
     OP_MANAGER_LOGD("rate=%d", rate);
     mDisplayPeakRefreshRate = rate;
+    if (property_set("persist.vendor.primarydisplay.op.peak_refresh_rate", rateStr) < 0) {
+        OP_MANAGER_LOGE("failed to set property persist.primarydisplay.op.peak_refresh_rate");
+    }
     return 0;
 }
 
@@ -121,6 +127,29 @@ int32_t ExynosPrimaryDisplayModule::OperationRateManager::onBrightness(uint32_t 
     if (dbv == 0 || mDisplayLastDbv == dbv) return 0;
     OP_MANAGER_LOGD("dbv=%d", dbv);
     mDisplayDbv = dbv;
+
+    /*
+        Update peak_refresh_rate from persist/vendor prop after a brightness change.
+        1. Otherwise there will be NS-HS-NS switch during the onPowerMode.
+        2. When constructor is called, persist property is not ready yet and returns 0.
+    */
+    if (!mDisplayPeakRefreshRate) {
+        char rateStr[PROP_VALUE_MAX];
+        int32_t vendorPeakRefreshRate = 0, persistPeakRefreshRate = 0;
+        if (property_get("persist.vendor.primarydisplay.op.peak_refresh_rate", rateStr, "0") >= 0 &&
+            atoi(rateStr) > 0) {
+            persistPeakRefreshRate = atoi(rateStr);
+            mDisplayPeakRefreshRate = persistPeakRefreshRate;
+        } else {
+            vendorPeakRefreshRate =
+                    property_get_int32("vendor.primarydisplay.op.peak_refresh_rate", 0);
+            mDisplayPeakRefreshRate = vendorPeakRefreshRate;
+        }
+
+        OP_MANAGER_LOGD("peak_refresh_rate=%d[vendor: %d|persist %d]", mDisplayPeakRefreshRate,
+                        vendorPeakRefreshRate, persistPeakRefreshRate);
+    }
+
     return updateOperationRateLocked(DispOpCondition::SET_DBV);
 }
 
