@@ -55,35 +55,23 @@ int32_t ExynosPrimaryDisplayModule::validateWinConfigData()
     return ExynosDisplay::validateWinConfigData();
 }
 
-int32_t ExynosPrimaryDisplayModule::OperationRateManager::getOperationRate() {
-    std::string op_rate_str;
-
-    ATRACE_CALL();
+int32_t ExynosPrimaryDisplayModule::OperationRateManager::getTargetOperationRate() {
     if (mDisplayPowerMode == HWC2_POWER_MODE_DOZE ||
         mDisplayPowerMode == HWC2_POWER_MODE_DOZE_SUSPEND) {
         return LP_OP_RATE;
+    } else {
+        return mDisplayTargetOperationRate;
     }
-
-    if (readLineFromFile(mSysfsPath, op_rate_str, '\n') != OK) {
-        OP_MANAGER_LOGE("failed to read %s", mSysfsPath.c_str());
-        return 0;
-    }
-    return !op_rate_str.empty() ? std::atoi(op_rate_str.c_str()) : 0;
 }
 
-int32_t ExynosPrimaryDisplayModule::OperationRateManager::setOperationRate(const int32_t rate) {
-    if (!mDisplayActiveOperationRate || mDisplayActiveOperationRate == rate) return NO_ERROR;
+int32_t ExynosPrimaryDisplayModule::OperationRateManager::setTargetOperationRate(
+        const int32_t rate) {
+    if (mDisplayTargetOperationRate == rate) return NO_ERROR;
 
-    ATRACE_CALL();
-    int32_t ret = writeIntToFile(mSysfsPath.c_str(), rate);
-    if (ret == NO_ERROR) {
-        mDisplayActiveOperationRate = rate;
-        OP_MANAGER_LOGI("succeed to write operation rate %d", rate);
-    } else {
-        OP_MANAGER_LOGE("failed to write operation rate %d", rate);
-    }
+    OP_MANAGER_LOGI("set target operation rate %d", rate);
+    mDisplayTargetOperationRate = rate;
 
-    return ret;
+    return NO_ERROR;
 }
 
 ExynosPrimaryDisplayModule::OperationRateManager::OperationRateManager(
@@ -99,8 +87,7 @@ ExynosPrimaryDisplayModule::OperationRateManager::OperationRateManager(
         mDisplayPowerMode(HWC2_POWER_MODE_ON),
         mDisplayLowBatteryModeEnabled(false) {
     mDisplayNsMinDbv = property_get_int32("vendor.primarydisplay.op.ns_min_dbv", 0);
-    mDisplayActiveOperationRate = mDisplayHsOperationRate;
-    mSysfsPath = mDisplay->getPanelSysfsPath(DisplayType::DISPLAY_PRIMARY) + "op_hz";
+    mDisplayTargetOperationRate = mDisplayHsOperationRate;
     OP_MANAGER_LOGI("Op Rate: NS=%d HS=%d NsMinDbv=%d", mDisplayNsOperationRate,
                     mDisplayHsOperationRate, mDisplayNsMinDbv);
 }
@@ -182,8 +169,8 @@ int32_t ExynosPrimaryDisplayModule::OperationRateManager::updateOperationRateLoc
 
     if (mDisplayPowerMode == HWC2_POWER_MODE_DOZE ||
         mDisplayPowerMode == HWC2_POWER_MODE_DOZE_SUSPEND) {
-        mDisplayActiveOperationRate = LP_OP_RATE;
-        desiredOpRate = mDisplayActiveOperationRate;
+        mDisplayTargetOperationRate = LP_OP_RATE;
+        desiredOpRate = mDisplayTargetOperationRate;
         effectiveOpRate = desiredOpRate;
     } else if (mDisplayPowerMode != HWC2_POWER_MODE_ON) {
         return ret;
@@ -196,7 +183,7 @@ int32_t ExynosPrimaryDisplayModule::OperationRateManager::updateOperationRateLoc
             effectiveOpRate = mDisplayHsOperationRate;
     } else if (cond == DispOpCondition::PANEL_SET_POWER) {
         if (mDisplayPowerMode == HWC2_POWER_MODE_ON) {
-            mDisplayActiveOperationRate = getOperationRate();
+            mDisplayTargetOperationRate = getTargetOperationRate();
         }
         effectiveOpRate = desiredOpRate;
     } else if (cond == DispOpCondition::SET_DBV) {
@@ -206,7 +193,7 @@ int32_t ExynosPrimaryDisplayModule::OperationRateManager::updateOperationRateLoc
             effectiveOpRate = desiredOpRate;
         }
         mDisplayLastDbv = dbv;
-        if (effectiveOpRate > LP_OP_RATE && (effectiveOpRate != mDisplayActiveOperationRate)) {
+        if (effectiveOpRate > LP_OP_RATE && (effectiveOpRate != mDisplayTargetOperationRate)) {
             OP_MANAGER_LOGD("brightness delta=%d", delta);
         } else {
             return ret;
@@ -217,11 +204,11 @@ int32_t ExynosPrimaryDisplayModule::OperationRateManager::updateOperationRateLoc
         OP_MANAGER_LOGI("rate switching is disabled, skip NS op rate update");
         return ret;
     } else if (effectiveOpRate > LP_OP_RATE) {
-        ret = setOperationRate(effectiveOpRate);
+        ret = setTargetOperationRate(effectiveOpRate);
     }
 
-    OP_MANAGER_LOGI("Op@%d(desired:%d) | Refresh@%d(peak:%d), Battery:%s, DBV:%d(NsMin:%d)",
-                    mDisplayActiveOperationRate, desiredOpRate, curRefreshRate,
+    OP_MANAGER_LOGI("Target@%d(desired:%d) | Refresh@%d(peak:%d), Battery:%s, DBV:%d(NsMin:%d)",
+                    mDisplayTargetOperationRate, desiredOpRate, curRefreshRate,
                     mDisplayPeakRefreshRate, mDisplayLowBatteryModeEnabled ? "Low" : "OK",
                     mDisplayLastDbv, mDisplayNsMinDbv);
     return ret;
