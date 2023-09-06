@@ -574,13 +574,15 @@ int32_t ExynosResourceManagerModule::otfMppReordering(ExynosDisplay *display,
 
     std::sort(otfMPPs.begin(), otfMPPs.end(), orderPolicy);
 
-    String8 after;
-    for (uint32_t i = 0; i < otfMPPs.size(); i++) {
-        ExynosMPPModule *mpp = (ExynosMPPModule *)otfMPPs[i];
-        after.appendFormat("%s) ->", mpp->mName.string());
-    }
+    if (hwcCheckDebugMessages(eDebugLoadBalancing)) {
+        String8 after;
+        for (uint32_t i = 0; i < otfMPPs.size(); i++) {
+            ExynosMPPModule *mpp = (ExynosMPPModule *)otfMPPs[i];
+            after.appendFormat("(%s) -> ", mpp->mName.string());
+        }
 
-    HDEBUGLOGD(eDebugLoadBalancing, "%s %p, %s", __func__, src.bufferHandle, after.string());
+        ALOGD("%s %p, %s", __func__, src.bufferHandle, after.string());
+    }
 
     return 0;
 }
