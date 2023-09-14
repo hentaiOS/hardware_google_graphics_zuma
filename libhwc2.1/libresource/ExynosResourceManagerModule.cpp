@@ -54,8 +54,8 @@ ExynosResourceManagerModule::~ExynosResourceManagerModule() {}
 
 bool ExynosResourceManagerModule::checkTDMResource(ExynosDisplay *display, ExynosMPP *currentMPP,
                                                    ExynosMPPSource *mppSrc) {
-    std::map<tdm_attr_t, uint32_t> accumulatedDPUFAmount;
-    std::map<tdm_attr_t, uint32_t> accumulatedDPUFAXIAmount;
+    std::array<uint32_t, TDM_ATTR_MAX> accumulatedDPUFAmount{};
+    std::array<uint32_t, TDM_ATTR_MAX> accumulatedDPUFAXIAmount{};
     const uint32_t blkId = currentMPP->getHWBlockId();
     const uint32_t axiId = currentMPP->getAXIPortId();
     HDEBUGLOGD(eDebugTDM, "%s : %p trying to assign to %s, compare with layers", __func__,
@@ -606,12 +606,11 @@ bool ExynosResourceManagerModule::isOverlapped(ExynosDisplay *display, ExynosMPP
     return false;
 }
 
-uint32_t ExynosResourceManagerModule::getAmounts(ExynosDisplay *display,
-                                                 uint32_t currentBlockId, uint32_t currentAXIId,
-                                                 ExynosMPP *compOtfMPP,
-                                                 ExynosMPPSource *curSrc, ExynosMPPSource *compSrc,
-                                                 std::map<tdm_attr_t, uint32_t> &DPUFAmounts,
-                                                 std::map<tdm_attr_t, uint32_t> &AXIAmounts) {
+uint32_t ExynosResourceManagerModule::getAmounts(ExynosDisplay* display, uint32_t currentBlockId,
+                                                 uint32_t currentAXIId, ExynosMPP* compOtfMPP,
+                                                 ExynosMPPSource* curSrc, ExynosMPPSource* compSrc,
+                                                 std::array<uint32_t, TDM_ATTR_MAX>& DPUFAmounts,
+                                                 std::array<uint32_t, TDM_ATTR_MAX>& AXIAmounts) {
     const uint32_t blockId = compOtfMPP->getHWBlockId();
     const uint32_t AXIId = compOtfMPP->getAXIPortId();
     if (currentBlockId == blockId && isOverlapped(display, curSrc, compSrc)) {
