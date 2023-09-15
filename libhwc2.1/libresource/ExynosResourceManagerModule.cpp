@@ -48,7 +48,7 @@ bool ExynosResourceManagerModule::checkTDMResource(ExynosDisplay *display, Exyno
     std::map<tdm_attr_t, uint32_t> accumulatedAmount;
     uint32_t currentBlockId = currentMPP->getHWBlockId();
     HDEBUGLOGD(eDebugTDM, "%s : %p trying to assign to %s, compare with layers", __func__,
-               mppSrc->mSrcImg.bufferHandle, currentMPP->mName.string());
+               mppSrc->mSrcImg.bufferHandle, currentMPP->mName.c_str());
     for (auto layer : display->mLayers) {
         ExynosMPP *otfMPP = layer->mOtfMPP;
         if (!otfMPP) continue;
@@ -58,7 +58,7 @@ bool ExynosResourceManagerModule::checkTDMResource(ExynosDisplay *display, Exyno
     if (display->mExynosCompositionInfo.mHasCompositionLayer) {
         HDEBUGLOGD(eDebugTDM,
                    "%s : %p trying to assign to %s, compare with ExynosComposition Target buffer",
-                   __func__, mppSrc->mSrcImg.bufferHandle, currentMPP->mName.string());
+                   __func__, mppSrc->mSrcImg.bufferHandle, currentMPP->mName.c_str());
         ExynosMPP *otfMPP = display->mExynosCompositionInfo.mOtfMPP;
         if (otfMPP)
             getAmounts(display, otfMPP, currentBlockId, &display->mExynosCompositionInfo, mppSrc,
@@ -68,7 +68,7 @@ bool ExynosResourceManagerModule::checkTDMResource(ExynosDisplay *display, Exyno
     if (display->mClientCompositionInfo.mHasCompositionLayer) {
         HDEBUGLOGD(eDebugTDM,
                    "%s : %p trying to assign to %s, compare with ClientComposition Target buffer",
-                   __func__, mppSrc->mSrcImg.bufferHandle, currentMPP->mName.string());
+                   __func__, mppSrc->mSrcImg.bufferHandle, currentMPP->mName.c_str());
         ExynosMPP *otfMPP = display->mClientCompositionInfo.mOtfMPP;
         if (otfMPP)
             getAmounts(display, otfMPP, currentBlockId, &display->mClientCompositionInfo, mppSrc,
@@ -81,18 +81,18 @@ bool ExynosResourceManagerModule::checkTDMResource(ExynosDisplay *display, Exyno
         amount = display->mDisplayTDMInfo[currentBlockId].getAvailableAmount(attr->first);
         HDEBUGLOGD(eDebugTDM,
                    "%s, layer[%p] -> %s attr[%s], accumulated : %d, current : %d, total : %d",
-                   __func__, mppSrc->mSrcImg.bufferHandle, currentMPP->mName.string(),
-                   attr->second.string(), accumulatedAmount[attr->first], currentAmount,
+                   __func__, mppSrc->mSrcImg.bufferHandle, currentMPP->mName.c_str(),
+                   attr->second.c_str(), accumulatedAmount[attr->first], currentAmount,
                    amount.totalAmount);
         if (accumulatedAmount[attr->first] + currentAmount > amount.totalAmount) {
             HDEBUGLOGD(eDebugTDM, "%s, %s could not assigned by attr[%s]", __func__,
-                       currentMPP->mName.string(), attr->second.string());
+                       currentMPP->mName.c_str(), attr->second.c_str());
             return false;
         }
     }
 
     HDEBUGLOGD(eDebugTDM, "%s : %p trying to assign to %s successfully", __func__,
-               mppSrc->mSrcImg.bufferHandle, currentMPP->mName.string());
+               mppSrc->mSrcImg.bufferHandle, currentMPP->mName.c_str());
     return true;
 }
 
@@ -116,7 +116,7 @@ bool ExynosResourceManagerModule::isHWResourceAvailable(ExynosDisplay *display,
     if (overlappedLayers.size()) {
         HDEBUGLOGD(eDebugTDM,
                    "%s : %p trying to assign to %s, check its overlapped layers(%zu) status",
-                   __func__, mppSrc->mSrcImg.bufferHandle, currentMPP->mName.string(),
+                   __func__, mppSrc->mSrcImg.bufferHandle, currentMPP->mName.c_str(),
                    overlappedLayers.size());
 
         for (auto &overlappedLayer : overlappedLayers) {
@@ -175,7 +175,7 @@ uint32_t ExynosResourceManagerModule::setDisplaysTDMInfo()
                 amount.totalAmount = total;
                 primaryDisplay->mDisplayTDMInfo[blockId->first].initTDMInfo(amount, attr->first);
                 HDEBUGLOGD(eDebugTDM, "Primary display (block : %d) : %s amount is updated to %d",
-                           blockId->first, attr->second.string(), amount.totalAmount);
+                           blockId->first, attr->second.c_str(), amount.totalAmount);
             }
         }
     }
@@ -190,7 +190,7 @@ uint32_t ExynosResourceManagerModule::setDisplaysTDMInfo()
                     amount = display->mDisplayTDMInfo[blockId->first].getAvailableAmount(
                             attr->first);
                     HDEBUGLOGD(eDebugTDM, "%s : [%s] display: %d, block : %d, amount : %d(%s)",
-                               __func__, attr->second.string(), display->mType, blockId->first,
+                               __func__, attr->second.c_str(), display->mType, blockId->first,
                                amount.totalAmount, display->isEnabled() ? "used" : "not used");
                 }
             }
@@ -509,7 +509,7 @@ int32_t ExynosResourceManagerModule::otfMppReordering(ExynosDisplay *display,
             }
 
             HDEBUGLOGD(eDebugLoadBalancing, "%s: %s is assigned (AFBC:%d, WCG:%d), is %s", __func__,
-                       mpp->mName.string(), isAFBC, isWCG,
+                       mpp->mName.c_str(), isAFBC, isWCG,
                        (mppSrc->mSourceType == MPP_SOURCE_LAYER) ? "Layer" : "Client Target");
             usedBlockCount[bId]++;
             usedAXIPortCount[aId]++;
@@ -528,10 +528,10 @@ int32_t ExynosResourceManagerModule::otfMppReordering(ExynosDisplay *display,
     String8 after;
     for (uint32_t i = 0; i < otfMPPs.size(); i++) {
         ExynosMPPModule *mpp = (ExynosMPPModule *)otfMPPs[i];
-        after.appendFormat("%s) ->", mpp->mName.string());
+        after.appendFormat("%s) ->", mpp->mName.c_str());
     }
 
-    HDEBUGLOGD(eDebugLoadBalancing, "%s %p, %s", __func__, src.bufferHandle, after.string());
+    HDEBUGLOGD(eDebugLoadBalancing, "%s %p, %s", __func__, src.bufferHandle, after.c_str());
 
     return 0;
 }
@@ -564,17 +564,17 @@ uint32_t ExynosResourceManagerModule::getAmounts(ExynosDisplay *display, ExynosM
     if ((currentBlockId == blockId) && (isOverlapped(display, current, compare))) {
         String8 log;
         if (hwcCheckDebugMessages(eDebugTDM)) {
-            log.appendFormat("%s", otfMPP->mName.string());
+            log.appendFormat("%s", otfMPP->mName.c_str());
         }
         for (auto attr = HWAttrs.begin(); attr != HWAttrs.end(); attr++) {
             uint32_t compareAmount = compare->getHWResourceAmount(attr->first);
             if (hwcCheckDebugMessages(eDebugTDM)) {
-                log.appendFormat(", attr %s %d(+ %d)", attr->second.string(), amounts[attr->first],
+                log.appendFormat(", attr %s %d(+ %d)", attr->second.c_str(), amounts[attr->first],
                                  compareAmount);
             }
             amounts[attr->first] += compareAmount;
         }
-        HDEBUGLOGD(eDebugTDM, "%s %s", __func__, log.string());
+        HDEBUGLOGD(eDebugTDM, "%s %s", __func__, log.c_str());
     }
 
     return 0;

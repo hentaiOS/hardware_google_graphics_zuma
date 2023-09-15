@@ -20,14 +20,14 @@
 
 #include "ExynosHWCHelper.h"
 
-#define OP_MANAGER_LOGD(msg, ...)                                                          \
-    ALOGD("[%s] OperationRateManager::%s:" msg, mDisplay->mDisplayName.string(), __func__, \
+#define OP_MANAGER_LOGD(msg, ...)                                                         \
+    ALOGD("[%s] OperationRateManager::%s:" msg, mDisplay->mDisplayName.c_str(), __func__, \
           ##__VA_ARGS__)
-#define OP_MANAGER_LOGI(msg, ...)                                                          \
-    ALOGI("[%s] OperationRateManager::%s:" msg, mDisplay->mDisplayName.string(), __func__, \
+#define OP_MANAGER_LOGI(msg, ...)                                                         \
+    ALOGI("[%s] OperationRateManager::%s:" msg, mDisplay->mDisplayName.c_str(), __func__, \
           ##__VA_ARGS__)
-#define OP_MANAGER_LOGE(msg, ...)                                                          \
-    ALOGE("[%s] OperationRateManager::%s:" msg, mDisplay->mDisplayName.string(), __func__, \
+#define OP_MANAGER_LOGE(msg, ...)                                                         \
+    ALOGE("[%s] OperationRateManager::%s:" msg, mDisplay->mDisplayName.c_str(), __func__, \
           ##__VA_ARGS__)
 
 using namespace zuma;
