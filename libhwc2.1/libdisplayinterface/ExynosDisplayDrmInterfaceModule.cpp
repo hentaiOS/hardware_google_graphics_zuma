@@ -61,11 +61,11 @@ int32_t ExynosPrimaryDisplayDrmInterfaceModule::sendHistogramChannelIoctl(Histog
     histogramRequest.hist_id = channelId;
 
     if (control == HistogramChannelIoctl_t::REQUEST) {
-        ATRACE_NAME(String8::format("requestIoctl #%u", channelId).string());
+        ATRACE_NAME(String8::format("requestIoctl #%u", channelId).c_str());
         return mDrmDevice->CallVendorIoctl(DRM_IOCTL_EXYNOS_HISTOGRAM_CHANNEL_REQUEST,
                                            (void *)&histogramRequest);
     } else if (control == HistogramChannelIoctl_t::CANCEL) {
-        ATRACE_NAME(String8::format("cancelIoctl #%u", channelId).string());
+        ATRACE_NAME(String8::format("cancelIoctl #%u", channelId).c_str());
         return mDrmDevice->CallVendorIoctl(DRM_IOCTL_EXYNOS_HISTOGRAM_CHANNEL_CANCEL,
                                            (void *)&histogramRequest);
     } else {

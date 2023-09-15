@@ -22,14 +22,14 @@
 
 #include "ExynosHWCHelper.h"
 
-#define OP_MANAGER_LOGD(msg, ...)                                                          \
-    ALOGD("[%s] OperationRateManager::%s:" msg, mDisplay->mDisplayName.string(), __func__, \
+#define OP_MANAGER_LOGD(msg, ...)                                                         \
+    ALOGD("[%s] OperationRateManager::%s:" msg, mDisplay->mDisplayName.c_str(), __func__, \
           ##__VA_ARGS__)
-#define OP_MANAGER_LOGI(msg, ...)                                                          \
-    ALOGI("[%s] OperationRateManager::%s:" msg, mDisplay->mDisplayName.string(), __func__, \
+#define OP_MANAGER_LOGI(msg, ...)                                                         \
+    ALOGI("[%s] OperationRateManager::%s:" msg, mDisplay->mDisplayName.c_str(), __func__, \
           ##__VA_ARGS__)
-#define OP_MANAGER_LOGE(msg, ...)                                                          \
-    ALOGE("[%s] OperationRateManager::%s:" msg, mDisplay->mDisplayName.string(), __func__, \
+#define OP_MANAGER_LOGE(msg, ...)                                                         \
+    ALOGE("[%s] OperationRateManager::%s:" msg, mDisplay->mDisplayName.c_str(), __func__, \
           ##__VA_ARGS__)
 
 using namespace zuma;
@@ -271,5 +271,5 @@ void ExynosPrimaryDisplayModule::checkPreblendingRequirement() {
     for (size_t i = 0; i < mLayers.size(); ++i) {
         count += checkPreblending(i, mLayers[i]);
     }
-    DISPLAY_LOGD(eDebugTDM, "disp(%d),cnt=%d%s", mDisplayId, count, log.string());
+    DISPLAY_LOGD(eDebugTDM, "disp(%d),cnt=%d%s", mDisplayId, count, log.c_str());
 }
