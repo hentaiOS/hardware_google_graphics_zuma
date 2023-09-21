@@ -54,12 +54,12 @@ ExynosResourceManagerModule::~ExynosResourceManagerModule() {}
 
 bool ExynosResourceManagerModule::checkTDMResource(ExynosDisplay *display, ExynosMPP *currentMPP,
                                                    ExynosMPPSource *mppSrc) {
-    std::map<tdm_attr_t, uint32_t> accumulatedDPUFAmount;
-    std::map<tdm_attr_t, uint32_t> accumulatedDPUFAXIAmount;
+    std::array<uint32_t, TDM_ATTR_MAX> accumulatedDPUFAmount{};
+    std::array<uint32_t, TDM_ATTR_MAX> accumulatedDPUFAXIAmount{};
     const uint32_t blkId = currentMPP->getHWBlockId();
     const uint32_t axiId = currentMPP->getAXIPortId();
     HDEBUGLOGD(eDebugTDM, "%s : %p trying to assign to %s, compare with layers", __func__,
-               mppSrc->mSrcImg.bufferHandle, currentMPP->mName.string());
+               mppSrc->mSrcImg.bufferHandle, currentMPP->mName.c_str());
     ExynosLayer *layer = (mppSrc->mSourceType == MPP_SOURCE_LAYER) ? (ExynosLayer *)mppSrc : nullptr;
 
     for (auto compLayer : display->mLayers) {
@@ -72,7 +72,7 @@ bool ExynosResourceManagerModule::checkTDMResource(ExynosDisplay *display, Exyno
     if (display->mExynosCompositionInfo.mHasCompositionLayer) {
         HDEBUGLOGD(eDebugTDM,
                    "%s : %p trying to assign to %s, compare with ExynosComposition Target buffer",
-                   __func__, mppSrc->mSrcImg.bufferHandle, currentMPP->mName.string());
+                   __func__, mppSrc->mSrcImg.bufferHandle, currentMPP->mName.c_str());
         ExynosMPP *otfMPP = display->mExynosCompositionInfo.mOtfMPP;
         if (otfMPP)
             getAmounts(display, blkId, axiId, otfMPP, mppSrc, &display->mExynosCompositionInfo,
@@ -82,7 +82,7 @@ bool ExynosResourceManagerModule::checkTDMResource(ExynosDisplay *display, Exyno
     if (display->mClientCompositionInfo.mHasCompositionLayer) {
         HDEBUGLOGD(eDebugTDM,
                    "%s : %p trying to assign to %s, compare with ClientComposition Target buffer",
-                   __func__, mppSrc->mSrcImg.bufferHandle, currentMPP->mName.string());
+                   __func__, mppSrc->mSrcImg.bufferHandle, currentMPP->mName.c_str());
         ExynosMPP *otfMPP = display->mClientCompositionInfo.mOtfMPP;
         if (otfMPP)
             getAmounts(display, blkId, axiId, otfMPP, mppSrc, &display->mClientCompositionInfo,
@@ -101,18 +101,18 @@ bool ExynosResourceManagerModule::checkTDMResource(ExynosDisplay *display, Exyno
                 display->mDisplayTDMInfo[TDMInfoIdx].getAvailableAmount(attr->first).totalAmount;
         HDEBUGLOGD(eDebugTDM,
                    "%s, layer[%p] -> %s attr[%s],ls=%d,accumulated:%d,current:%d,total: %d",
-                   __func__, mppSrc->mSrcImg.bufferHandle, currentMPP->mName.string(),
-                   attr->second.name.string(), loadSharing, accumulatedAmount[attr->first],
+                   __func__, mppSrc->mSrcImg.bufferHandle, currentMPP->mName.c_str(),
+                   attr->second.name.c_str(), loadSharing, accumulatedAmount[attr->first],
                    currentAmount, totalAmount);
         if (accumulatedAmount[attr->first] + currentAmount > totalAmount) {
             HDEBUGLOGD(eDebugTDM, "%s, %s could not assigned by attr[%s]", __func__,
-                       currentMPP->mName.string(), attr->second.name.string());
+                       currentMPP->mName.c_str(), attr->second.name.c_str());
             return false;
         }
     }
 
     HDEBUGLOGD(eDebugTDM, "%s : %p trying to assign to %s successfully", __func__,
-               mppSrc->mSrcImg.bufferHandle, currentMPP->mName.string());
+               mppSrc->mSrcImg.bufferHandle, currentMPP->mName.c_str());
     return true;
 }
 
@@ -136,7 +136,7 @@ bool ExynosResourceManagerModule::isHWResourceAvailable(ExynosDisplay *display,
     if (overlappedLayers.size()) {
         HDEBUGLOGD(eDebugTDM,
                    "%s : %p trying to assign to %s, check its overlapped layers(%zu) status",
-                   __func__, mppSrc->mSrcImg.bufferHandle, currentMPP->mName.string(),
+                   __func__, mppSrc->mSrcImg.bufferHandle, currentMPP->mName.c_str(),
                    overlappedLayers.size());
 
         for (auto &overlappedLayer : overlappedLayers) {
@@ -172,16 +172,15 @@ void ExynosResourceManagerModule::setupHWResource(const tdm_attr_t &tdmAttrId, c
                                                          tdmAttrId);
         if (addedDisplay == nullptr) {
             HDEBUGLOGD(eDebugTDM, "(%s=>%s) : %s amount is updated to %d",
-                       resourceIdx.toString8().string(), iter->first.toString8().string(),
-                       name.string(), amount);
+                       resourceIdx.toString8().c_str(), iter->first.toString8().c_str(),
+                       name.c_str(), amount);
         } else {
-            HDEBUGLOGD(eDebugTDM,
-                       "(%s=>%s) : hwResource.totalAmount=%d %s amount is updated to %d",
-                       resourceIdx.toString8().string(), iter->first.toString8().string(),
-                       hwResource.totalAmount, name.string(), amount);
+            HDEBUGLOGD(eDebugTDM, "(%s=>%s) : hwResource.totalAmount=%d %s amount is updated to %d",
+                       resourceIdx.toString8().c_str(), iter->first.toString8().c_str(),
+                       hwResource.totalAmount, name.c_str(), amount);
         }
     } else {
-        ALOGW("(%s): cannot find resource for %s", resourceIdx.toString8().string(), name.string());
+        ALOGW("(%s): cannot find resource for %s", resourceIdx.toString8().c_str(), name.c_str());
     }
 }
 
@@ -231,7 +230,7 @@ uint32_t ExynosResourceManagerModule::setDisplaysTDMInfo()
                                                  .getAvailableAmount(attr->first)
                                                  .totalAmount;
                         HDEBUGLOGD(eDebugTDM, "%s : [%s] display:%d,block:%d, amount : %d(%s)",
-                                   __func__, attr->second.name.string(), display->mType,
+                                   __func__, attr->second.name.c_str(), display->mType,
                                    blockId->first, amount,
                                    display->isEnabled() ? "used" : "not used");
                     } else {
@@ -242,7 +241,7 @@ uint32_t ExynosResourceManagerModule::setDisplaysTDMInfo()
                                                      .totalAmount;
                             HDEBUGLOGD(eDebugTDM,
                                        "%s : [%s] display:%d,block:%d,axi:%d, amount:%d(%s)",
-                                       __func__, attr->second.name.string(), display->mType,
+                                       __func__, attr->second.name.c_str(), display->mType,
                                        blockId->first, axi->first, amount,
                                        display->isEnabled() ? "used" : "not used");
                         }
@@ -278,6 +277,11 @@ uint32_t ExynosResourceManagerModule::initDisplaysTDMInfo()
     }
 
     return 0;
+}
+
+uint32_t getSramAmount(tdm_attr_t attr, uint32_t formatProperty, lbWidthIndex_t widthIndex) {
+    auto it = sramAmountMap.find(sramAmountParams(attr, formatProperty, widthIndex));
+    return (it != sramAmountMap.end()) ? it->second : 0;
 }
 
 uint32_t ExynosResourceManagerModule::calculateHWResourceAmount(ExynosDisplay *display,
@@ -316,7 +320,7 @@ uint32_t ExynosResourceManagerModule::calculateHWResourceAmount(ExynosDisplay *d
     /** To find index **/
     uint32_t formatIndex = 0;
 
-    lbWidthIndex_t widthIndex;
+    lbWidthIndex_t widthIndex = LB_W_3073_INF;
 
     auto findWidthIndex = [&](int32_t w) -> lbWidthIndex_t {
         for (auto it = LB_WIDTH_INDEX_MAP.begin(); it != LB_WIDTH_INDEX_MAP.end(); it++) {
@@ -336,27 +340,13 @@ uint32_t ExynosResourceManagerModule::calculateHWResourceAmount(ExynosDisplay *d
             int32_t width_y = pixel_align(width + kSramSBWCRotWidthAlign, kSramSBWCRotWidthAlign);
             int32_t width_c =
                     pixel_align(width / 2 + kSramSBWCRotWidthAlign, kSramSBWCRotWidthAlign);
-            widthIndex = findWidthIndex(width_y);
-            if (sramAmountMap.find(sramAmountParams(TDM_ATTR_ROT_90, SBWC_Y, widthIndex)) !=
-                sramAmountMap.end())
-                SRAMtotal +=
-                        sramAmountMap.at(sramAmountParams(TDM_ATTR_ROT_90, SBWC_Y, widthIndex));
-            widthIndex = findWidthIndex(width_c * 2);
-            if (sramAmountMap.find(sramAmountParams(TDM_ATTR_ROT_90, SBWC_UV, widthIndex)) !=
-                sramAmountMap.end())
-                SRAMtotal +=
-                        sramAmountMap.at(sramAmountParams(TDM_ATTR_ROT_90, SBWC_UV, widthIndex));
+            SRAMtotal += getSramAmount(TDM_ATTR_ROT_90, SBWC_Y, findWidthIndex(width_y));
+            SRAMtotal += getSramAmount(TDM_ATTR_ROT_90, SBWC_UV, findWidthIndex(width_c * 2));
         } else {
             /* sramAmountMap has SRAM for both Y and UV */
             widthIndex = findWidthIndex(width);
-            if (sramAmountMap.find(sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_Y | formatBPP,
-                                                    widthIndex)) != sramAmountMap.end())
-                SRAMtotal += sramAmountMap.at(
-                        sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_Y | formatBPP, widthIndex));
-            if (sramAmountMap.find(sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_UV | formatBPP,
-                                                    widthIndex)) != sramAmountMap.end())
-                SRAMtotal += sramAmountMap.at(
-                        sramAmountParams(TDM_ATTR_ROT_90, NON_SBWC_UV | formatBPP, widthIndex));
+            SRAMtotal += getSramAmount(TDM_ATTR_ROT_90, NON_SBWC_Y | formatBPP, widthIndex);
+            SRAMtotal += getSramAmount(TDM_ATTR_ROT_90, NON_SBWC_UV | formatBPP, widthIndex);
         }
         HDEBUGLOGD(eDebugTDM, "+ rotation : %d", SRAMtotal);
     } else {
@@ -376,21 +366,14 @@ uint32_t ExynosResourceManagerModule::calculateHWResourceAmount(ExynosDisplay *d
         /* AFBC amount */
         if (compressType == COMP_TYPE_AFBC) {
             formatIndex = (isFormatRgb(format) ? RGB : 0) | formatBPP;
-            if (sramAmountMap.find(sramAmountParams(TDM_ATTR_AFBC, formatIndex, widthIndex)) !=
-                sramAmountMap.end())
-                SRAMtotal +=
-                        sramAmountMap.at(sramAmountParams(TDM_ATTR_AFBC, formatIndex, widthIndex));
+            SRAMtotal += getSramAmount(TDM_ATTR_AFBC, formatIndex, widthIndex);
             HDEBUGLOGD(eDebugTDM, "+ AFBC : %d", SRAMtotal);
         }
 
         /* SBWC amount */
         if (compressType == COMP_TYPE_SBWC) {
-            if (sramAmountMap.find(sramAmountParams(TDM_ATTR_SBWC, SBWC_Y, widthIndex)) !=
-                sramAmountMap.end())
-                SRAMtotal += sramAmountMap.at(sramAmountParams(TDM_ATTR_SBWC, SBWC_Y, widthIndex));
-            if (sramAmountMap.find(sramAmountParams(TDM_ATTR_SBWC, SBWC_UV, widthIndex)) !=
-                sramAmountMap.end())
-                SRAMtotal += sramAmountMap.at(sramAmountParams(TDM_ATTR_SBWC, SBWC_UV, widthIndex));
+            SRAMtotal += getSramAmount(TDM_ATTR_SBWC, SBWC_Y, widthIndex);
+            SRAMtotal += getSramAmount(TDM_ATTR_SBWC, SBWC_UV, widthIndex);
             HDEBUGLOGD(eDebugTDM, "+ SBWC : %d", SRAMtotal);
         }
     }
@@ -398,9 +381,7 @@ uint32_t ExynosResourceManagerModule::calculateHWResourceAmount(ExynosDisplay *d
     /* ITP (CSC) amount */
     if (isFormatYUV(format)) {
         /** ITP has no size difference, Use width index as LB_W_3073_INF **/
-        if (sramAmountMap.find(sramAmountParams(TDM_ATTR_ITP, formatBPP, LB_W_3073_INF)) !=
-            sramAmountMap.end())
-            SRAMtotal += sramAmountMap.at(sramAmountParams(TDM_ATTR_ITP, formatBPP, LB_W_3073_INF));
+        SRAMtotal += getSramAmount(TDM_ATTR_ITP, formatBPP, LB_W_3073_INF);
         HDEBUGLOGD(eDebugTDM, "+ YUV : %d", SRAMtotal);
     }
 
@@ -425,10 +406,7 @@ uint32_t ExynosResourceManagerModule::calculateHWResourceAmount(ExynosDisplay *d
             formatIndex = FORMAT_YUV_MASK;
 
         /** Scale has no size difference, Use width index as LB_W_3073_INF **/
-        if (sramAmountMap.find(sramAmountParams(TDM_ATTR_SCALE, formatIndex, LB_W_3073_INF)) !=
-            sramAmountMap.end())
-            SRAMtotal +=
-                    sramAmountMap.at(sramAmountParams(TDM_ATTR_SCALE, formatIndex, LB_W_3073_INF));
+        SRAMtotal += getSramAmount(TDM_ATTR_SCALE, formatIndex, LB_W_3073_INF);
         HDEBUGLOGD(eDebugTDM, "+ Scale : %d", SRAMtotal);
     }
 
@@ -558,7 +536,7 @@ int32_t ExynosResourceManagerModule::otfMppReordering(ExynosDisplay *display,
             }
 
             HDEBUGLOGD(eDebugLoadBalancing, "%s: %s is assigned (AFBC:%d, WCG:%d), is %s", __func__,
-                       mpp->mName.string(), isAFBC, isWCG,
+                       mpp->mName.c_str(), isAFBC, isWCG,
                        (mppSrc->mSourceType == MPP_SOURCE_LAYER) ? "Layer" : "Client Target");
             usedBlockCount[bId]++;
             usedAXIPortCount[aId]++;
@@ -574,13 +552,15 @@ int32_t ExynosResourceManagerModule::otfMppReordering(ExynosDisplay *display,
 
     std::sort(otfMPPs.begin(), otfMPPs.end(), orderPolicy);
 
-    String8 after;
-    for (uint32_t i = 0; i < otfMPPs.size(); i++) {
-        ExynosMPPModule *mpp = (ExynosMPPModule *)otfMPPs[i];
-        after.appendFormat("%s) ->", mpp->mName.string());
-    }
+    if (hwcCheckDebugMessages(eDebugLoadBalancing)) {
+        String8 after;
+        for (uint32_t i = 0; i < otfMPPs.size(); i++) {
+            ExynosMPPModule *mpp = (ExynosMPPModule *)otfMPPs[i];
+            after.appendFormat("(%s) -> ", mpp->mName.c_str());
+        }
 
-    HDEBUGLOGD(eDebugLoadBalancing, "%s %p, %s", __func__, src.bufferHandle, after.string());
+        ALOGD("%s %p, %s", __func__, src.bufferHandle, after.c_str());
+    }
 
     return 0;
 }
@@ -604,23 +584,22 @@ bool ExynosResourceManagerModule::isOverlapped(ExynosDisplay *display, ExynosMPP
     return false;
 }
 
-uint32_t ExynosResourceManagerModule::getAmounts(ExynosDisplay *display,
-                                                 uint32_t currentBlockId, uint32_t currentAXIId,
-                                                 ExynosMPP *compOtfMPP,
-                                                 ExynosMPPSource *curSrc, ExynosMPPSource *compSrc,
-                                                 std::map<tdm_attr_t, uint32_t> &DPUFAmounts,
-                                                 std::map<tdm_attr_t, uint32_t> &AXIAmounts) {
+uint32_t ExynosResourceManagerModule::getAmounts(ExynosDisplay* display, uint32_t currentBlockId,
+                                                 uint32_t currentAXIId, ExynosMPP* compOtfMPP,
+                                                 ExynosMPPSource* curSrc, ExynosMPPSource* compSrc,
+                                                 std::array<uint32_t, TDM_ATTR_MAX>& DPUFAmounts,
+                                                 std::array<uint32_t, TDM_ATTR_MAX>& AXIAmounts) {
     const uint32_t blockId = compOtfMPP->getHWBlockId();
     const uint32_t AXIId = compOtfMPP->getAXIPortId();
     if (currentBlockId == blockId && isOverlapped(display, curSrc, compSrc)) {
         String8 log;
         if (hwcCheckDebugMessages(eDebugTDM)) {
-            log.appendFormat("%s", compOtfMPP->mName.string());
+            log.appendFormat("%s", compOtfMPP->mName.c_str());
         }
         for (auto attr = HWAttrs.begin(); attr != HWAttrs.end(); attr++) {
             uint32_t compareAmount = compSrc->getHWResourceAmount(attr->first);
             if (hwcCheckDebugMessages(eDebugTDM)) {
-                log.appendFormat(", attr %s DPUF-%d(+ %d)", attr->second.name.string(),
+                log.appendFormat(", attr %s DPUF-%d(+ %d)", attr->second.name.c_str(),
                                  DPUFAmounts[attr->first], compareAmount);
             }
             DPUFAmounts[attr->first] += compareAmount;
@@ -631,7 +610,7 @@ uint32_t ExynosResourceManagerModule::getAmounts(ExynosDisplay *display,
                 AXIAmounts[attr->first] += compareAmount;
             }
         }
-        HDEBUGLOGD(eDebugTDM, "%s %s", __func__, log.string());
+        HDEBUGLOGD(eDebugTDM, "%s %s", __func__, log.c_str());
     }
 
     return 0;

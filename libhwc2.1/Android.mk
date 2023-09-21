@@ -28,7 +28,8 @@ LOCAL_SRC_FILES += \
 	../../gs201/libhwc2.1/libdisplayinterface/ExynosDisplayDrmInterfaceModule.cpp \
 	../../zuma/libhwc2.1/libdisplayinterface/ExynosDisplayDrmInterfaceModule.cpp \
 	../../zuma/libhwc2.1/libcolormanager/DisplayColorModule.cpp \
-	../../zuma/libhwc2.1/libdevice/ExynosDeviceModule.cpp
+	../../zuma/libhwc2.1/libdevice/ExynosDeviceModule.cpp \
+	../../zuma/libhwc2.1/libdevice/HistogramController.cpp
 
 LOCAL_CFLAGS += -DDISPLAY_COLOR_LIB=\"libdisplaycolor.so\"
 
