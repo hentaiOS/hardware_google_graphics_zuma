@@ -18,12 +18,12 @@
 
 // TODO: b/295990513 - Remove the if defined after kernel prebuilts are merged.
 #if defined(EXYNOS_HISTOGRAM_CHANNEL_REQUEST)
-int HistogramController::createHistogramDrmConfigLocked(const ChannelInfo &channel,
-                                                        std::shared_ptr<void> &configPtr,
-                                                        size_t &length) const {
+int HistogramController::createHistogramDrmConfigLocked(const ChannelInfo& channel,
+                                                        std::shared_ptr<void>& configPtr,
+                                                        size_t& length) const {
     configPtr = std::make_shared<struct histogram_channel_config>();
-    struct histogram_channel_config *channelConfig =
-            (struct histogram_channel_config *)configPtr.get();
+    struct histogram_channel_config* channelConfig =
+            (struct histogram_channel_config*)configPtr.get();
 
     if (channelConfig == nullptr) {
         ALOGE("%s: histogram failed to allocate histogram_channel_config", __func__);
@@ -46,11 +46,11 @@ int HistogramController::createHistogramDrmConfigLocked(const ChannelInfo &chann
     return NO_ERROR;
 }
 
-int HistogramController::parseDrmEvent(void *event, uint8_t &channelId, char16_t *&buffer) const {
-    struct exynos_drm_histogram_channel_event *histogram_channel_event =
-            (struct exynos_drm_histogram_channel_event *)event;
+int HistogramController::parseDrmEvent(void* event, uint8_t& channelId, char16_t*& buffer) const {
+    struct exynos_drm_histogram_channel_event* histogram_channel_event =
+            (struct exynos_drm_histogram_channel_event*)event;
     channelId = histogram_channel_event->hist_id;
-    buffer = (char16_t *)&histogram_channel_event->bins;
+    buffer = (char16_t*)&histogram_channel_event->bins;
     return NO_ERROR;
 }
 #endif
