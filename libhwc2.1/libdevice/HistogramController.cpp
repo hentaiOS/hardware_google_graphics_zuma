@@ -16,6 +16,11 @@
 
 #include "HistogramController.h"
 
+void HistogramController::initPlatformHistogramCapability() {
+    mHistogramCapability.supportSamplePosList.push_back(HistogramSamplePos::PRE_POSTPROC);
+    mHistogramCapability.supportBlockingRoi = true;
+}
+
 // TODO: b/295990513 - Remove the if defined after kernel prebuilts are merged.
 #if defined(EXYNOS_HISTOGRAM_CHANNEL_REQUEST)
 int HistogramController::createHistogramDrmConfigLocked(const ChannelInfo& channel,
@@ -34,6 +39,17 @@ int HistogramController::createHistogramDrmConfigLocked(const ChannelInfo& chann
     channelConfig->roi.start_y = channel.workingConfig.roi.top;
     channelConfig->roi.hsize = channel.workingConfig.roi.right - channel.workingConfig.roi.left;
     channelConfig->roi.vsize = channel.workingConfig.roi.bottom - channel.workingConfig.roi.top;
+    if (channel.workingConfig.blockingRoi.has_value() &&
+        channel.workingConfig.blockingRoi.value() != DISABLED_ROI) {
+        const HistogramRoiRect& blockedRoi = channel.workingConfig.blockingRoi.value();
+        channelConfig->flags |= HISTOGRAM_FLAGS_BLOCKED_ROI;
+        channelConfig->blocked_roi.start_x = blockedRoi.left;
+        channelConfig->blocked_roi.start_y = blockedRoi.top;
+        channelConfig->blocked_roi.hsize = blockedRoi.right - blockedRoi.left;
+        channelConfig->blocked_roi.vsize = blockedRoi.bottom - blockedRoi.top;
+    } else {
+        channelConfig->flags &= ~HISTOGRAM_FLAGS_BLOCKED_ROI;
+    }
     channelConfig->weights.weight_r = channel.workingConfig.weights.weightR;
     channelConfig->weights.weight_g = channel.workingConfig.weights.weightG;
     channelConfig->weights.weight_b = channel.workingConfig.weights.weightB;
@@ -41,6 +57,7 @@ int HistogramController::createHistogramDrmConfigLocked(const ChannelInfo& chann
             ? POST_DQE
             : PRE_DQE;
     channelConfig->threshold = channel.threshold;
+
     length = sizeof(struct histogram_channel_config);
 
     return NO_ERROR;
