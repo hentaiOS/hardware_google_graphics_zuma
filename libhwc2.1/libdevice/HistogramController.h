@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
+#pragma once
+
 #include "HistogramDevice.h"
 
 class HistogramController : public HistogramDevice {
 public:
-    HistogramController(ExynosDisplay *display) : HistogramDevice(display, 4, {3}) {}
+    HistogramController(ExynosDisplay* display) : HistogramDevice(display, 4, {3}) {}
 // TODO: b/295990513 - Remove the if defined after kernel prebuilts are merged.
 #if defined(EXYNOS_HISTOGRAM_CHANNEL_REQUEST)
-    virtual int createHistogramDrmConfigLocked(const ChannelInfo &channel,
-                                               std::shared_ptr<void> &configPtr,
-                                               size_t &length) const override
+    virtual int createHistogramDrmConfigLocked(const ChannelInfo& channel,
+                                               std::shared_ptr<void>& configPtr,
+                                               size_t& length) const override
             REQUIRES(channel.channelInfoMutex);
-    virtual int parseDrmEvent(void *event, uint8_t &channelId, char16_t *&buffer) const override;
+    virtual int parseDrmEvent(void* event, uint8_t& channelId, char16_t*& buffer) const override;
 #endif
 };
