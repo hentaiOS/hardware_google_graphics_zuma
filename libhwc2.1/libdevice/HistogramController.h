@@ -21,6 +21,7 @@
 class HistogramController : public HistogramDevice {
 public:
     HistogramController(ExynosDisplay* display) : HistogramDevice(display, 4, {3}) {}
+    virtual void initPlatformHistogramCapability() override;
 // TODO: b/295990513 - Remove the if defined after kernel prebuilts are merged.
 #if defined(EXYNOS_HISTOGRAM_CHANNEL_REQUEST)
     virtual int createHistogramDrmConfigLocked(const ChannelInfo& channel,
