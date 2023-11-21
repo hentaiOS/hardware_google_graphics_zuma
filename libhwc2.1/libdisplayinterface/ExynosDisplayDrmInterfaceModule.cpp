@@ -52,8 +52,6 @@ ExynosPrimaryDisplayDrmInterfaceModule::ExynosPrimaryDisplayDrmInterfaceModule(E
             std::memcpy(mMonitorDescription.data(), panelModel.c_str(), mMonitorDescription.size());
 }
 
-// TODO: b/295990513 - Remove the if defined after kernel prebuilts are merged.
-#if defined(EXYNOS_HISTOGRAM_CHANNEL_REQUEST)
 int32_t ExynosPrimaryDisplayDrmInterfaceModule::sendHistogramChannelIoctl(HistogramChannelIoctl_t control, uint8_t channelId) const {
     struct exynos_drm_histogram_channel_request histogramRequest;
 
@@ -73,4 +71,3 @@ int32_t ExynosPrimaryDisplayDrmInterfaceModule::sendHistogramChannelIoctl(Histog
         return BAD_VALUE;
     }
 }
-#endif
