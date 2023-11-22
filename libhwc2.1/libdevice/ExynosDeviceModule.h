@@ -25,7 +25,7 @@ namespace zuma {
 
 class ExynosDeviceModule : public gs201::ExynosDeviceModule {
 public:
-    ExynosDeviceModule();
+    ExynosDeviceModule(bool isVrrApiSupported);
     virtual ~ExynosDeviceModule();
     using OverlayProperties = aidl::android::hardware::graphics::composer3::OverlayProperties;
     using SupportedBufferCombinations = OverlayProperties::SupportedBufferCombinations;

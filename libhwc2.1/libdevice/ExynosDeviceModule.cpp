@@ -24,7 +24,8 @@ using Dataspace = aidl::android::hardware::graphics::common::Dataspace;
 
 namespace zuma {
 
-ExynosDeviceModule::ExynosDeviceModule() {}
+ExynosDeviceModule::ExynosDeviceModule(bool isVrrApiSupported)
+      : gs201::ExynosDeviceModule(isVrrApiSupported) {}
 
 ExynosDeviceModule::~ExynosDeviceModule() {}
 
