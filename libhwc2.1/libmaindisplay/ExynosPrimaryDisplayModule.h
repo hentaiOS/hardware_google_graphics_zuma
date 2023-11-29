@@ -43,7 +43,7 @@ class ExynosPrimaryDisplayModule : public gs201::ExynosPrimaryDisplayModule {
             int32_t onConfig(hwc2_config_t cfg) override;
             int32_t onBrightness(uint32_t dbv) override;
             int32_t onPowerMode(int32_t mode) override;
-            int32_t getTargetOperationRate() override;
+            int32_t getTargetOperationRate() const override;
 
         private:
             enum class DispOpCondition : uint32_t {

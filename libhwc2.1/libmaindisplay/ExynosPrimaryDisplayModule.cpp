@@ -55,7 +55,7 @@ int32_t ExynosPrimaryDisplayModule::validateWinConfigData()
     return ExynosDisplay::validateWinConfigData();
 }
 
-int32_t ExynosPrimaryDisplayModule::OperationRateManager::getTargetOperationRate() {
+int32_t ExynosPrimaryDisplayModule::OperationRateManager::getTargetOperationRate() const {
     if (mDisplayPowerMode == HWC2_POWER_MODE_DOZE ||
         mDisplayPowerMode == HWC2_POWER_MODE_DOZE_SUSPEND) {
         return LP_OP_RATE;
