@@ -24,7 +24,7 @@ ExynosPrimaryDisplayDrmInterfaceModule::ExynosPrimaryDisplayDrmInterfaceModule(E
   : gs201::ExynosPrimaryDisplayDrmInterfaceModule(exynosDisplay)
 {
             ExynosPrimaryDisplayModule* display = (ExynosPrimaryDisplayModule*)mExynosDisplay;
-            const std::string &sysfs = display->getPanelSysfsPath(display->getBuiltInDisplayType());
+            const std::string& sysfs = display->getPanelSysfsPath();
             std::string panelModel;
 
             if (sysfs.empty()) {
