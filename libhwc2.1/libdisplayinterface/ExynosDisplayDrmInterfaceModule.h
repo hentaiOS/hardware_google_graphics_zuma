@@ -23,16 +23,10 @@
 
 namespace zuma {
 
-class ExynosPrimaryDisplayDrmInterfaceModule
-      : public gs201::ExynosPrimaryDisplayDrmInterfaceModule {
+    class ExynosPrimaryDisplayDrmInterfaceModule : public gs201::ExynosPrimaryDisplayDrmInterfaceModule {
 public:
-    ExynosPrimaryDisplayDrmInterfaceModule(ExynosDisplay *exynosDisplay);
-// TODO: b/295990513 - Remove the if defined after kernel prebuilts are merged.
-#if defined(EXYNOS_HISTOGRAM_CHANNEL_REQUEST)
-    virtual int32_t sendHistogramChannelIoctl(HistogramChannelIoctl_t control,
-                                              uint8_t channelId) const override;
-#endif
-};
+        ExynosPrimaryDisplayDrmInterfaceModule(ExynosDisplay *exynosDisplay);
+    };
 
 using ExynosExternalDisplayDrmInterfaceModule = gs201::ExynosExternalDisplayDrmInterfaceModule;
 
